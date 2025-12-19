@@ -1,0 +1,352 @@
+/* Estilos baseados nos seus forms: cores brancas, fonts simples, botões com hover. Responsivo. */
+
+:root {
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --font-family: Tahoma, sans-serif;
+    --radius: 5px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+    color: #333;
+}
+
+
+
+header {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+}
+
+header h1 {
+    margin: 0;
+    color: var(--primary);
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav li {
+    margin-left: 20px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+}
+
+nav a:hover {
+    background-color: #eee;
+}
+
+
+.nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center; /* centraliza os botões */
+  margin: 1rem 0;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--primary);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  transition: 0.2s;
+}
+
+.botoesEscuros{
+    background-color: #007bff;
+    color: white;
+    border:  #007bff;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    
+}
+
+.botoesEscuros:hover{
+    background-color: #0056b3;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: #000000 0px 0px 5px;
+    
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: #000000 0px 0px 5px;
+}
+
+.menu-toggle {
+    display: none; /* Escondido em desktop */
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.section {
+    padding: 20px 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px); /* Desliza para baixo */
+    transition:
+        opacity 0.5s ease-in-out,
+        visibility 0.5s ease-in-out,
+        transform 0.5s ease-in-out;
+}
+
+.section.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0); /* Volta à posição original */
+}
+
+.hidden {
+    display: none; /* Para mostrar/ocultar seções via JS */
+}
+
+form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.error {
+    color: red;
+    font-size: 12px;
+}
+
+
+footer{
+    color: #000000;
+    size: 5px;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Responsivo (mobile-first) */
+@media (max-width: 768px) {
+    nav ul {
+        display: none; /* Esconde menu em mobile */
+        flex-direction: column;
+    }
+
+    nav ul.show {
+        display: flex; /* Mostra quando toggle */
+    }
+
+    .menu-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+}
+
+/* Estilos para replicar exatamente a imagem fornecida */
+
+.hero-section {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #e0f7ff 0%, #a0d8ef 100%); /* Gradient azul claro como na imagem */
+    padding-top: 100px; /* Espaço para o header fixo */
+}
+
+.hero-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* Botões como na imagem: Login outline, Sign Up filled */
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Ajustes para mobile */
+@media (max-width: 992px) {
+    .row {
+        flex-direction: column-reverse;
+    }
+    .col-lg-6 {
+        margin-bottom: 2rem;
+    }
+}
+
+.carousel {
+    width: 350px;
+    height: 250px;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 1px solid #ccc; /* Adicionei borda para debug */
+}
+
+.slides {
+    display: flex;
+    width: calc(350px * 4); /* Use pixels fixos para evitar cálculos errados */
+    height: 250px; /* Altura fixa igual ao .carousel */
+    transition: transform 0.5s ease-in-out;
+}
+
+.slides img {
+    width: 350px; /* Largura fixa igual ao .carousel */
+    height: 250px; /* Altura fixa igual ao .carousel */
+    object-fit: cover; /* Usar 'cover' para preencher todo o espaço */
+    flex-shrink: 0; /* Evita que as imagens sejam comprimidas */
+}
+
+
+
+header .container-header {
+    padding: 10px 30px 15px 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 130px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: var(--shadow);
+    width: 100%;
+}
+
+.containerPaginaInicial , .containerQuemSomos{
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+}
+
+.logo{
+    width: 150px;
+    height: 50px;
+    margin-top: 10px;
+    cursor: pointer;
+}   
+
+/* Área de upload personalizada - sem Bootstrap */
+.upload-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.upload-area {
+    border: 3px dashed #0d6efd;
+    border-radius: 1rem;
+    background-color: #f0f8ff;
+    padding: 4rem 2rem;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    background-color: #e3f2fd;
+}
+
+.cloud-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+  display: block;
+}
+
+.upload-text {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.upload-subtext {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 30px;
+}
+
+.upload-button {
+  background-color: #1e90ff;
+  color: white;
+  border: none;
+  padding: 14px 40px;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 500;
+}
+
+.upload-button:hover {
+  background-color: #0d7ee6;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 30px 20px;
+  }
+  .upload-area {
+    padding: 40px 15px;
+  }
+}
