@@ -10,19 +10,35 @@
     --light: #f8f9fa;
     --dark: #343a40;
     --font-family: Tahoma, sans-serif;
-    --radius: 5px;
+    --radius: 10px;
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-body {
-    font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
+html, body {
+    height: 100%;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
-    color: #333;
 }
 
+/* body {
 
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+    color: #333;
+} */
+
+body {
+        font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Garante pelo menos a altura da viewport */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+}
+
+main {
+    flex: 1; /* Isso é o segredo! O main ocupa todo o espaço disponível */
+}
 
 header {
     background-color: #f8f8f8;
@@ -159,11 +175,15 @@ button:hover {
 }
 
 
-footer{
-    color: #000000;
-    size: 5px;
-    text-align: center;
+/* Footer fica sempre no fundo */
+footer {
     background-color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    padding: 15px 0;
+    font-size: 0.9rem;
+    color: #333;
+    border-top: 1px solid #ddd;
+    margin-top: auto; /* Reforça que o footer vai para o fim */
 }
 
 /* Responsivo (mobile-first) */
@@ -269,6 +289,16 @@ header .container-header {
     gap: 40px;
 }
 
+.containerSessao{
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.95);
+    height: 300px;
+}
+
 .logo{
     width: 150px;
     height: 50px;
@@ -349,4 +379,11 @@ header .container-header {
   .upload-area {
     padding: 40px 15px;
   }
+}
+
+.botaoEnviarFicheiro{
+    background: var(--primary);
+    border: none;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0, 163, 255, 0.3);
 }
