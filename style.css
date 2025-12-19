@@ -27,13 +27,15 @@ html, body {
 } */
 
 body {
-        font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
+    font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
     min-height: 100vh; /* Garante pelo menos a altura da viewport */
     background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;  /* <--- Esta linha resolve! */
 }
 
 main {
@@ -70,7 +72,6 @@ nav a {
 nav a:hover {
     background-color: #eee;
 }
-
 
 .nav {
   display: flex;
@@ -276,7 +277,7 @@ header .container-header {
     padding: 10px 30px 15px 10px;
     display: flex;
     flex-direction: row;
-    gap: 130px;
+    gap: 250px;
     background-color: rgba(255, 255, 255, 0.95);
     box-shadow: var(--shadow);
     width: 100%;
@@ -297,6 +298,7 @@ header .container-header {
     align-items: center;
     background-color: rgba(255, 255, 255, 0.95);
     height: 300px;
+    width: 400px;
 }
 
 .logo{
