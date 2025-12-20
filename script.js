@@ -8,6 +8,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    document.querySelector('.logo').addEventListener('click', function () {
+        // Esconde todas as secções
+        document.querySelectorAll('.section').forEach(sec => {
+            sec.classList.remove('visible');
+            sec.classList.add('hidden');
+        });
+
+        document.getElementById('home').classList.remove('hidden');
+
+        // Adiciona a classe `visible` para ativar a transição
+        requestAnimationFrame(() => {
+            document.getElementById('home').classList.add('visible');
+        });
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector('.nav-btn[data-section="home"]').classList.add('active');
+    });
+
+    document.querySelectorAll('.redirect').forEach(element => {
+        element.addEventListener('click', function () {
+            const targetSection = this.dataset.section; // 'login' ou 'signup'
+
+            // Esconde todas as secções
+            document.querySelectorAll('.section').forEach(sec => {
+                sec.classList.remove('visible');
+                sec.classList.add('hidden');
+            });
+
+            // Mostra a secção correta com transição suave
+            const target = document.getElementById(targetSection);
+            target.classList.remove('hidden');
+
+            requestAnimationFrame(() => {
+                target.classList.add('visible');
+            });
+
+            // Atualiza o botão ativo no menu (se existir um botão para login/signup)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Ativa o botão correspondente no menu
+            const navButton = document.querySelector(`.nav-btn[data-section="${targetSection}"]`);
+            if (navButton) {
+                navButton.classList.add('active');
+            }
+        });
+    });
+
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
         btn.addEventListener('click', () => {
