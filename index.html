@@ -128,15 +128,15 @@
         </section>
 
         <section id="login" class="section hidden">
-        <div class="containerSessao">
             <h2>Login</h2>
-            <form id="form-login">
+        <div class="containerSessao">
+            <form id="form-login" class="form-sessao">
                 <label for="username">Username:</label>
                 <input type="text" id="username" required>
                 <label for="password">Password:</label>
-                <input type="password" id="password" required>
-                <br>
-                <button type="submit">Entrar</button>
+                <input type="password" id="password">
+                <div class="formCheck"><input type="checkbox" name="mostrarSenha" id="mostrarSenha">mostrar Password</div>
+                <button type="submit" class="botoesEscuros" style="width: 100%;">Entrar</button>
             </form>
             <p id="login-error" class="error"></p>
             </div>
