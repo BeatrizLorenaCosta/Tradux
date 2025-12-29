@@ -151,4 +151,77 @@ document.addEventListener('DOMContentLoaded', () => {
             slides.style.transform = `translateX(${-index * 100}%)`;
         }, 1000);
     }
+
+
+    // FUNÇÃO GENÉRICA PARA PAINÉIS COM SIDEBAR (Admin e User)
+    document.querySelectorAll('.nav-item[data-section-id]').forEach(item => {
+        item.addEventListener('click', function () {
+            const sectionId = this.getAttribute('data-section-id');
+            const panelType = this.closest('.sidebar').id; // 'adminSidebar' ou 'userSidebar'
+
+            let titleElement, contentSelector, menuSelector;
+
+            if (panelType === 'adminSidebar') {
+                titleElement = document.getElementById('adminPageTitle');
+                contentSelector = '.admin-page';
+                menuSelector = '#adminSidebar .nav-item';
+            } else if (panelType === 'userSidebar') {
+                titleElement = document.getElementById('userPageTitle');
+                contentSelector = '.user-page';
+                menuSelector = '#userSidebar .nav-item';
+            } else {
+                return; // segurança
+            }
+
+            // Atualiza o título da página
+            if (titleElement) {
+                titleElement.textContent = this.textContent.trim();
+            }
+
+            // Remove 'active' de todos os itens do menu deste painel
+            document.querySelectorAll(menuSelector).forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+
+            // Esconde todas as páginas deste painel
+            document.querySelectorAll(contentSelector).forEach(page => {
+                page.style.display = 'none';
+            });
+
+            // Mostra a página selecionada
+            const targetPage = document.getElementById(sectionId);
+            if (targetPage) {
+                targetPage.style.display = 'block';
+            }
+        });
+    });
+
+    // TOGGLE SIDEBAR EM MOBILE (funciona para os dois painéis)
+    document.querySelectorAll('[id$="MenuToggle"]').forEach(toggle => {
+        toggle.addEventListener('click', function () {
+            const sidebarId = this.id.replace('MenuToggle', 'Sidebar'); // adminMenuToggle → adminSidebar
+            const sidebar = document.getElementById(sidebarId);
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+            }
+        });
+    });
+
+    // LOGOUT ESPECÍFICO DO UTILIZADOR
+    document.getElementById('userLogout')?.addEventListener('click', function () {
+        // Chama a tua função de logout existente
+        sairLogin();
+
+        // Volta para a página inicial (ou login, como preferires)
+        document.querySelectorAll('.section').forEach(sec => {
+            sec.classList.remove('visible');
+            sec.classList.add('hidden');
+        });
+
+        const homeSection = document.getElementById('home');
+        homeSection.classList.remove('hidden');
+
+        requestAnimationFrame(() => {
+            homeSection.classList.add('visible');
+        });
+    });
 });
