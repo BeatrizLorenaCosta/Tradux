@@ -1,14 +1,17 @@
 const express = require('express');
-const { db } = require('../db/connection');
-const { verifyToken } = require('../middleware/auth.middleware');
-
 const router = express.Router();
+const { db } = require('../db/connection'); // garante que este db pega os dados do env
 
-
-//Insert para pedido
-
-//select para ir buscar as linguas
-
-//eventualmente forma para guardar os ficheiros
+router.get('/linguas', async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            'SELECT id_lingua, nome_lingua FROM linguas ORDER BY nome_lingua'
+        );
+        res.json(rows);
+    } catch (err) {
+        console.error('Erro ao buscar línguas:', err);
+        res.status(500).json({ message: err.message });
+    }
+});
 
 module.exports = router;
