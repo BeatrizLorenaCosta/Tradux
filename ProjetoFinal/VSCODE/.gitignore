@@ -1,0 +1,21 @@
+# Ignora todos os ficheiros e pastas fora da pasta Tradux
+../
+../../
+
+# Ignora módulos de aulas (PDFs e PPTX)
+*.pdf
+*.pptx
+*.docx
+
+# Ignora pastas específicas
+PDF/
+VisualStudio/
+Mod*/
+
+# Ignora configurações do VS/Code
+.vscode/
+*.code-workspace
+
+# Ignora o submodule se não quiseres versionar o conteúdo dele
+Tradux/*
+!Tradux/.gitkeep  # opcional: mantém um ficheiro vazio para a pasta existir
