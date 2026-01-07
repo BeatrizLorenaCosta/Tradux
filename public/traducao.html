@@ -24,23 +24,10 @@
             <img src="../src/img/titulo.png" alt="Logo Tradux" class="logo">
         </a>
 
-        <nav class="nav d-flex align-items-center w-100" aria-label="Navegação principal">
-            <!-- Centro -->
-            <div class="nav-center mx-auto">
+        <nav class="main-nav d-flex align-items-center w-100" aria-label="Navegação principal">
+            <div id="main-nav" class="nav-center mx-auto">
                 <a href="index.html" class="nav-btn">Início</a>
                 <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
-                <a href="traducao.html" class="nav-btn">Tradução</a>
-            </div>
-
-            <!-- Direita -->
-            <div class="nav-right ms-auto">
-                <a href="login-signup.html" id="btn-login" class="nav-btn">
-                    Login & Signup
-                </a>
-
-                <a href="perfil.html" id="btn-perfil" class="nav-btn d-none">
-                    Perfil
-                </a>
             </div>
         </nav>
     </div>
@@ -126,7 +113,13 @@
 
         <!-- JS -->
         <script src="../src/js/traducao.js" defer></script>
-        <script src="../src/js/auth-ui.js" defer></script>
+        <script src="../src/js/main.js" defer></script>
+        <script>
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login-signup.html';
+            }
+        </script>
 
     </body>
 </html>

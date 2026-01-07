@@ -23,5 +23,5 @@ app.use('/api/traducao', traducaoRoutes);
 app.get('/', (req, res) => res.send('Servidor Tradux ativo!'));
 
 app.listen(process.env.PORT || 5000, () => {
-    console.log(`Servidor a correr na porta ${process.env.PORT || "http://localhost:5000/"}`);
+    console.log(`Servidor a correr na porta http://localhost:${process.env.PORT}/`);
 });
