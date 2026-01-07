@@ -16,8 +16,9 @@ create table cargo (
 );
 
 create table linguas (
-    id_linguas INT AUTO_INCREMENT PRIMARY KEY,
+    id_lingua INT AUTO_INCREMENT PRIMARY KEY,
     nome_lingua VARCHAR(50) NOT NULL UNIQUE,
+    sigla VARCHAR(10),
     contagem INT DEFAULT 0
 );
 
@@ -48,15 +49,16 @@ create table documentos (
         'em_revisao', 
         'traduzido', 
         'finalizado',
-        'a_pagar'
+        'a_pagar',
+        'cancelado'
         ) DEFAULT 'em_analise',
 
     erros_encontrados TEXT,
     conta_id INT NOT NULL,
     
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
-    FOREIGN KEY (lingua_origem) REFERENCES linguas(id_linguas),
-    FOREIGN KEY (lingua_destino) REFERENCES linguas(id_linguas)
+    FOREIGN KEY (lingua_origem) REFERENCES linguas(id_lingua),
+    FOREIGN KEY (lingua_destino) REFERENCES linguas(id_lingua)
 );
 
 create table equipas (
@@ -82,7 +84,7 @@ create table perfis_linguisticos (
 
     CONSTRAINT fk_perfis_lingua_secundaria FOREIGN KEY (lingua_secundaria) REFERENCES linguas(id_lingua),
 
-    CONSTRAINT uq_perfil_unico_por_conta UNIQUE (id_conta)
+    CONSTRAINT uq_perfil_unico_por_conta UNIQUE (conta_id)
 );
 
 --
@@ -95,12 +97,12 @@ INSERT INTO cargo (nome_cargo) VALUES
 ('Tradutor'),
 ('Revisor');
 
-INSERT INTO linguas (nome_lingua) VALUES
-('Português'),
-('Inglês'),
-('Espanhol'),
-('Francês'),
-('Alemão');
+INSERT INTO linguas (nome_lingua, sigla) VALUES
+('Português', 'PT'),
+('Inglês', 'EN'),
+('Espanhol', 'ES'),
+('Francês', 'FR'),
+('Alemão', 'DE');
 
 INSERT INTO contas (nome_utilizador, email, username, senha_hash, cargo_id) VALUES
 ('Administrador', 'admin@tradux.pt', 'admin', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 1), -- password: 123123
@@ -111,3 +113,50 @@ INSERT INTO contas (nome_utilizador, email, username, senha_hash, cargo_id) VALU
 INSERT INTO perfis_linguisticos (conta_id, lingua_principal, lingua_secundaria) VALUES
 (3, 1, 2),  -- Ana: Português → Inglês
 (4, 2, 1);  -- Carlos: Inglês → Português
+
+
+INSERT INTO documentos (
+    documento_link,
+    documento_link_final,
+    lingua_origem,
+    lingua_destino,
+    estado,
+    erros_encontrados,
+    conta_id
+) VALUES
+(
+    '/uploads/doc1_original.pdf',
+    NULL,
+    1, -- Português
+    2, -- Inglês
+    'em_traducao',
+    NULL,
+    2  -- João Cliente
+),
+(
+    '/uploads/doc2_original.docx',
+    '/uploads/doc2_final.docx',
+    2, -- Inglês
+    1, -- Português
+    'finalizado',
+    'Pequenos erros gramaticais corrigidos',
+    2  -- João Cliente
+),
+('/uploads/doc3_original.pdf', NULL, 1, 3, 'em_analise',NULL, 2),
+('/uploads/doc4_original.pdf', NULL, 1, 3, 'em_revisao',NULL, 2),
+('/uploads/doc5_original.pdf', NULL, 1, 3, 'traduzido',NULL, 2),
+('/uploads/doc6_original.pdf', NULL, 1, 3, 'a_pagar',NULL, 2),
+('/uploads/doc6_original.pdf', NULL, 1, 3, 'cancelado',NULL, 2);
+
+
+INSERT INTO equipas (conta_id, documento_id, ocupado) VALUES
+(
+    3, -- Ana Tradutora
+    1, -- Documento em tradução
+    TRUE
+),
+(
+    4, -- Carlos Revisor
+    2, -- Documento finalizado
+    FALSE
+);
