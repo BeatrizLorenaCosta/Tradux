@@ -440,7 +440,7 @@ header .container-header {
     width: 260px;
     background: #1e293b;
     color: white;
-    height: 545px;
+    height: -webkit-fill-available;
     position: fixed;
     top: 0;
     left: 0;

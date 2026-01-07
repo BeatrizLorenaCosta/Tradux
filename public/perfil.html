@@ -25,12 +25,9 @@
                         class="logo">
                 </a>
 
-                <nav class="nav" aria-label="Navegação principal">
+                <nav id="main-nav" class="nav">
                     <a href="index.html" class="nav-btn">Início</a>
-                    <a href="quem-somos.html" class="nav-btn active">Quem
-                        Somos</a>
-                    <a href="traducao.html" class="nav-btn">Tradução</a>
-                    <a href="perfil.html" class="nav-btn active">Perfil</a>
+                    <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
                 </nav>
             </div>
         </header>
@@ -55,6 +52,10 @@
                                 data-section-id="alterar-dados">
                                 <i class="fas fa-user-edit me-3"></i> Alterar
                                 Dados
+                            </div>
+                            <div class="nav-item" id="logoutUserBtn"
+                                onclick="sairLogin()">
+                                <i class="fas fa-sign-out-alt me-3"></i> Sair
                             </div>
                         </nav>
                     </aside>
@@ -106,38 +107,8 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr>
-                                                        <td>#TRX-2048</td>
-                                                        <td>contrato_empresarial.pdf</td>
-                                                        <td>PT → EN</td>
-                                                        <td><span
-                                                                class="badge bg-warning">Em
-                                                                tradução</span></td>
-                                                        <td>29/12/2025</td>
-                                                        <td><button
-                                                                class="btn btn-sm btn-outline-primary">Ver</button></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>#TRX-2039</td>
-                                                        <td>diploma_universidade.pdf</td>
-                                                        <td>PT → FR</td>
-                                                        <td><span
-                                                                class="badge bg-success">Concluído</span></td>
-                                                        <td>20/12/2025</td>
-                                                        <td><button
-                                                                class="btn btn-sm btn-success">Descarregar</button></td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>#TRX-2035</td>
-                                                        <td>manual_tecnico.pdf</td>
-                                                        <td>EN → ES</td>
-                                                        <td><span
-                                                                class="badge bg-info">Em
-                                                                revisão</span></td>
-                                                        <td>15/12/2025</td>
-                                                        <td><button
-                                                                class="btn btn-sm btn-outline-primary">Ver</button></td>
-                                                    </tr>
+                                                    <!-- Linhas de documentos serão
+                                                        inseridas aqui via JS -->
                                                 </tbody>
                                             </table>
                                         </div>
@@ -155,67 +126,90 @@
                                     <div class="col-lg-8 col-md-10">
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-body p-4 p-md-5">
+
                                                 <form id="form-dados">
+                                                    <!-- Email -->
                                                     <div
                                                         class="row mb-3 align-items-center">
-
-                                                        <label for="email"
-                                                            class="col-sm-3 data-label mb-3"">Email:</label>
+                                                        <label
+                                                            for="perfil-email"
+                                                            class="col-sm-3 data-label">
+                                                            Email:
+                                                        </label>
                                                         <div class="col-sm-9">
-                                                            <input type="text"
-                                                                id="username"
+                                                            <input
+                                                                type="email"
+                                                                id="perfil-email"
                                                                 class="form-control"
-                                                                readonly>
-                                                        </div>
-
-                                                        <label for="nome"
-                                                            class="col-sm-3 data-label mb-3">Nome:</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="text"
-                                                                id="username"
-                                                                class="form-control"
-                                                                readonly>
-                                                        </div>
-
-                                                        <label for="password"
-                                                            class="col-sm-3 data-label mb-3">Password:</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="text"
-                                                                id="username"
-                                                                class="form-control"
-                                                                readonly>
-                                                        </div>
-
-                                                        <label for="password"
-                                                            class="col-sm-3 data-label mb-3">Confirmar
-                                                            Password:</label>
-                                                        <div class="col-sm-9">
-                                                            <input type="text"
-                                                                id="username"
-                                                                class="form-control"
-                                                                readonly>
+                                                                required>
                                                         </div>
                                                     </div>
+
+                                                    <!-- Nome -->
+                                                    <div
+                                                        class="row mb-3 align-items-center">
+                                                        <label for="perfil-nome"
+                                                            class="col-sm-3 data-label">
+                                                            Nome:
+                                                        </label>
+                                                        <div class="col-sm-9">
+                                                            <input
+                                                                type="text"
+                                                                id="perfil-nome"
+                                                                class="form-control"
+                                                                required>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Password -->
+                                                    <div
+                                                        class="row mb-3 align-items-center">
+                                                        <label
+                                                            for="perfil-password"
+                                                            class="col-sm-3 data-label">
+                                                            Nova password:
+                                                        </label>
+                                                        <div class="col-sm-9">
+                                                            <input
+                                                                type="password"
+                                                                id="perfil-password"
+                                                                class="form-control"
+                                                                placeholder="Deixar vazio para não alterar">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Confirmar Password -->
+                                                    <div
+                                                        class="row mb-4 align-items-center">
+                                                        <label
+                                                            for="perfil-password-confirm"
+                                                            class="col-sm-3 data-label">
+                                                            Confirmar password:
+                                                        </label>
+                                                        <div class="col-sm-9">
+                                                            <input
+                                                                type="password"
+                                                                id="perfil-password-confirm"
+                                                                class="form-control">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Botões -->
+                                                    <div
+                                                        class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
+                                                        <button type="submit"
+                                                            class="btn btn-outline-primary btn-lg px-5">
+                                                            Guardar Alterações
+                                                        </button>
+                                                    </div>
                                                 </form>
-                                                <!-- Botões -->
-                                                <div
-                                                    class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
-                                                    <button type="button"
-                                                        class="btn btn-outline-primary btn-lg px-5"
-                                                        id="btn-editar-dados">
-                                                        ALTERAR DADOS
-                                                    </button>
-                                                    <button type="button"
-                                                        class="btn btn-secondary btn-lg px-5"
-                                                        id="btn-voltar-perfil">
-                                                        VOLTAR
-                                                    </button>
-                                                </div>
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -228,6 +222,13 @@
 
         <!-- JS -->
         <script src="../src/js/perfil.js" defer></script>
+        <script src="../src/js/main.js" defer></script>
+        <script>
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login-signup.html';
+            }
+        </script>
 
     </body>
 </html>
