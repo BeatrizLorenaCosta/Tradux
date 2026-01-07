@@ -18,34 +18,33 @@
     </head>
     <body>
         <header>
-            <div class="container-header">
-                <a href="index.html">
-                    <img src="../src/img/titulo.png" alt="logo tradux"
-                        class="logo" data-section="home">
+    <div class="container-header">
+        <a href="index.html">
+            <img src="../src/img/titulo.png" alt="Logo Tradux" class="logo">
+        </a>
+
+        <nav class="nav d-flex align-items-center w-100" aria-label="Navegação principal">
+            <!-- Centro -->
+            <div class="nav-center mx-auto">
+                <a href="index.html" class="nav-btn">Início</a>
+                <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
+                <a href="traducao.html" class="nav-btn">Tradução</a>
+            </div>
+
+            <!-- Direita -->
+            <div class="nav-right ms-auto">
+                <a href="login-signup.html" id="btn-login" class="nav-btn">
+                    Login & Signup
                 </a>
 
-                <!-- <nav aria-label="Seções do tradux" class="nav">
-                <button class="nav-btn" data-section="home">Inicio</button>
-                <button class="nav-btn" data-section="quemSomos">Quem Somos</button>
-                <button class="nav-btn" data-section="traducao">Tradução</button>
-                <button class="nav-btn" data-section="login">Login</button>
-                <button class="nav-btn" data-section="signup">Signup</button>
-                <button class="nav-btn" data-section="admin">Admin</button>
-                <button class="nav-btn" data-section="fatura">fatura</button>
-                <button class="nav-btn" data-section="recibo">recibo</button>
-                <button class="nav-btn" data-section="perfil">Perfil</button>
-                <button id="logout-btn" class="botoesEscuros"  onclick="sairLogin()" style="display: none;">Sair</button>
-            </nav> -->
-
-                <nav class="nav">
-                    <a href="index.html" class="nav-btn active">Início</a>
-                    <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
-                    <a href="traducao.html" class="nav-btn">Tradução</a>
-                    <a href="login-signup.html" class="nav-btn">Login & Signup</a>
-                </nav>
-
+                <a href="perfil.html" id="btn-perfil" class="nav-btn d-none">
+                    Perfil
+                </a>
             </div>
-        </header>
+        </nav>
+    </div>
+</header>
+
         <!--  -->
         <main>
 
@@ -84,6 +83,7 @@
         </footer>
 
         <script src="../src/js/main.js" defer></script>
+        <script src="../src/js/auth-ui.js" defer></script>
 
     </body>
 </html>
