@@ -61,15 +61,31 @@ create table documentos (
     FOREIGN KEY (lingua_destino) REFERENCES linguas(id_lingua)
 );
 
-create table equipas (
+CREATE TABLE equipas (
     id_equipa INT AUTO_INCREMENT PRIMARY KEY,
-    conta_id INT NOT NULL,
-    documento_id INT NOT NULL,
-    ocupado BOOLEAN DEFAULT FALSE,
-
-    FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
-    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento)
+    nome_equipa VARCHAR(100) NOT NULL,
+    tipo ENUM('tradutores','revisores') NOT NULL
 );
+
+CREATE TABLE equipa_membros (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipa_id INT NOT NULL,
+    conta_id INT NOT NULL,
+    FOREIGN KEY (equipa_id) REFERENCES equipas(id_equipa) ON DELETE CASCADE,
+    FOREIGN KEY (conta_id) REFERENCES contas(id_conta) ON DELETE CASCADE
+);
+
+CREATE TABLE equipa_documentos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipa_id INT NOT NULL,
+    documento_id INT NOT NULL,
+    FOREIGN KEY (equipa_id) REFERENCES equipas(id_equipa) ON DELETE CASCADE,
+    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento) ON DELETE CASCADE,
+    UNIQUE (equipa_id, documento_id)
+);
+
+
+
 
 create table perfis_linguisticos (
     id_perfil_linguistico INT AUTO_INCREMENT PRIMARY KEY,
@@ -106,6 +122,7 @@ INSERT INTO linguas (nome_lingua, sigla) VALUES
 
 INSERT INTO contas (nome_utilizador, email, username, senha_hash, cargo_id) VALUES
 ('Administrador', 'admin@tradux.pt', 'admin', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 1), -- password: 123123
+('Maria Costa', 'adminMaria@tradux.pt', 'adminMaria', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 1), -- password: 123123
 ('João Cliente', 'joao@cliente.pt', 'joaocliente', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 2), -- password: 123123
 ('Ana Tradutora', 'ana@tradux.pt', 'anatrad', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 3), -- password: 123123
 ('Carlos Revisor', 'carlos@tradux.pt', 'carlosrev', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 4); -- password: 123123
@@ -131,7 +148,7 @@ INSERT INTO documentos (
     2, -- Inglês
     'em_traducao',
     NULL,
-    2  -- João Cliente
+    3  -- João Cliente
 ),
 (
     '/uploads/doc2_original.docx',
@@ -140,23 +157,23 @@ INSERT INTO documentos (
     1, -- Português
     'finalizado',
     'Pequenos erros gramaticais corrigidos',
-    2  -- João Cliente
+    3  -- João Cliente
 ),
-('/uploads/doc3_original.pdf', NULL, 1, 3, 'em_analise',NULL, 2),
-('/uploads/doc4_original.pdf', NULL, 1, 3, 'em_revisao',NULL, 2),
-('/uploads/doc5_original.pdf', NULL, 1, 3, 'traduzido',NULL, 2),
-('/uploads/doc6_original.pdf', NULL, 1, 3, 'a_pagar',NULL, 2),
-('/uploads/doc6_original.pdf', NULL, 1, 3, 'cancelado',NULL, 2);
+('/uploads/doc3_original.pdf', NULL, 1, 3, 'em_analise',NULL, 3),
+('/uploads/doc4_original.pdf', NULL, 1, 3, 'em_revisao',NULL, 3),
+('/uploads/doc5_original.pdf', NULL, 1, 3, 'traduzido',NULL, 3),
+('/uploads/doc6_original.pdf', NULL, 1, 3, 'a_pagar',NULL, 3),
+('/uploads/doc6_original.pdf', NULL, 1, 3, 'cancelado',NULL, 3);
 
 
-INSERT INTO equipas (conta_id, documento_id, ocupado) VALUES
-(
-    3, -- Ana Tradutora
-    1, -- Documento em tradução
-    TRUE
-),
-(
-    4, -- Carlos Revisor
-    2, -- Documento finalizado
-    FALSE
-);
+INSERT INTO equipas (nome_equipa, tipo) VALUES
+('Equipa de Tradutores', 'tradutores'),
+('Equipa de Revisores', 'revisores');
+
+INSERT INTO equipa_membros (equipa_id, conta_id) VALUES
+(1, 4); -- Carlos Revisor é membro da equipa de revisores
+
+INSERT INTO equipa_documentos (equipa_id, documento_id) VALUES
+(1, 1), -- Equipa de tradutores trabalha no documento 1
+(2, 2); -- Equipa de revisores trabalha no documento 2
+

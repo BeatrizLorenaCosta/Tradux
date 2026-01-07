@@ -1,0 +1,157 @@
+document.addEventListener('DOMContentLoaded', () => {
+    carregarDocumentosRecentes();
+    inicializarSidebar();
+    
+});
+
+
+/* =========================
+    CONFIGURAÇÕES GERAIS
+========================= */
+
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    if (!token) sairLogin();
+
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+/* =========================
+   SIDEBAR / NAVEGAÇÃO
+========================= */
+
+function inicializarSidebar() {
+    document.querySelectorAll('#adminSidebar .nav-item[data-section-id]').forEach(item => {
+        item.addEventListener('click', () => {
+            const sectionId = item.dataset.sectionId;
+
+            document.getElementById('adminPageTitle').textContent =
+                item.textContent.trim();
+
+            document.querySelectorAll('#adminSidebar .nav-item')
+                .forEach(i => i.classList.remove('active'));
+            item.classList.add('active');
+
+            document.querySelectorAll('.admin-page')
+                .forEach(p => p.style.display = 'none');
+
+            document.getElementById(sectionId).style.display = 'block';
+        });
+    });
+
+    document.getElementById('adminMenuToggle')?.addEventListener('click', () => {
+        document.getElementById('adminSidebar').classList.toggle('active');
+    });
+}
+
+/* =========================
+    DOCUMENTOS RECENTES
+========================= */
+
+async function carregarDocumentosRecentes() {
+    try {
+        const res = await fetch('/api/admin/ultimos-documentos', {
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) throw new Error('Erro ao carregar documentos recentes');
+
+        const documentos = await res.json();
+        const tbody = document.querySelector('#ul-documentos tbody');
+        tbody.innerHTML = '';
+
+        if (!documentos.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted">
+                        Nenhum documento encontrado.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        documentos.forEach(doc => {
+            let corEstado = '';
+            let estadoLabel = '';
+
+            switch (doc.estado) {
+                case 'em_analise':
+                    estadoLabel = 'Em Análise';
+                    corEstado = 'secondary';
+                    break;
+                case 'em_traducao':
+                    estadoLabel = 'Em Tradução';
+                    corEstado = 'warning';
+                    break;
+                case 'em_revisao':
+                    estadoLabel = 'Em Revisão';
+                    corEstado = 'info';
+                    break;
+                case 'finalizado':
+                    estadoLabel = 'Finalizado';
+                    corEstado = 'success';
+                    break;
+                case 'traduzido':
+                    estadoLabel = 'Traduzido';
+                    corEstado = 'primary';
+                    break;
+                case 'a_pagar':
+                    estadoLabel = 'A Pagar';
+                    corEstado = 'danger';
+                    break;
+                case 'cancelado':
+                    estadoLabel = 'Cancelado';
+                    corEstado = 'dark';
+                    break;
+            }
+
+
+            let acaoHTML = '';
+
+            if (doc.documento_link_final) {
+                acaoHTML = `
+                    <a href="${doc.documento_link_final}"
+                    class="btn btn-sm btn-success">
+                    Descarregar
+                    </a>
+                `;
+            } else if (doc.estado === 'a_pagar') {
+                acaoHTML = `
+                    <button class="btn btn-sm btn-danger">
+                        Pagar
+                    </button>
+                `;
+            } else {
+                acaoHTML = `
+                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                        —
+                    </button>
+                `;
+            }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>#TRX-${doc.id_documento}</td>
+                    <td>${doc.documento_link}</td>
+                    <td>${doc.lingua_origem} → ${doc.lingua_destino}</td>
+                    <td>
+                        <span class="badge bg-${corEstado}">
+                            ${estadoLabel}
+                        </span>
+                    </td>
+                    <td>${new Date(doc.data_envio).toLocaleDateString('pt-PT')}</td>
+                    <td>
+                        ${acaoHTML}
+                    </td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+}
