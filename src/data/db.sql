@@ -35,7 +35,7 @@ create table contas (
 
 create table documentos (
     id_documento INT AUTO_INCREMENT PRIMARY KEY,
-    nome VARCHAR(50) NOT NULL,
+    nome VARCHAR(50),
     documento_link VARCHAR(255) NOT NULL,
     documento_link_final VARCHAR(255),
     lingua_origem INT NOT NULL,
