@@ -19,20 +19,19 @@
     <body>
 
         <header>
-            <div class="container-header">
-                <a href="index.html">
-                    <img src="../src/img/titulo.png" alt="Logo Tradux"
-                        class="logo">
-                </a>
+    <div class="container-header">
+        <a href="index.html">
+            <img src="../src/img/titulo.png" alt="Logo Tradux" class="logo">
+        </a>
 
-                <nav class="nav" aria-label="Navegação principal">
-                    <a href="index.html" class="nav-btn">Início</a>
-                    <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
-                    <a href="traducao.html" class="nav-btn active">Tradução</a>
-                    <a href="login-signup.html" class="nav-btn">Login & Signup</a>
-                </nav>
+        <nav class="main-nav d-flex align-items-center w-100" aria-label="Navegação principal">
+            <div id="main-nav" class="nav-center mx-auto">
+                <a href="index.html" class="nav-btn">Início</a>
+                <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
             </div>
-        </header>
+        </nav>
+    </div>
+</header>
 
         <main>
             <section class="section visible">
@@ -41,17 +40,17 @@
                     <div class="mt-5">
                         <label for="origem" class="form-label fw-bold">Língua Original:</label>
                         <select id="origem" class="form-select mb-3">
-                            <option value="pt">Português</option>
-                            <option value="en">Inglês</option>
-                            <option value="es">Espanhol</option>
-                            <!-- mais opções -->
+                                <option value="">Selecione a língua</option>
+
+                            <!-- opções postas pela BD-->
+
                         </select>
 
                         <label for="destino" class="form-label fw-bold">Língua Destino:</label>
                         <select id="destino" class="form-select mb-4">
-                            <option value="en">Inglês</option>
-                            <option value="pt">Português</option>
-                            <option value="es">Espanhol</option>
+                                <option value="">Selecione a língua</option>
+
+                            <!-- opções postas pela BD-->
                         </select>
                     </div>
                 </form>
@@ -114,6 +113,13 @@
 
         <!-- JS -->
         <script src="../src/js/traducao.js" defer></script>
+        <script src="../src/js/main.js" defer></script>
+        <script>
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login-signup.html';
+            }
+        </script>
 
     </body>
 </html>

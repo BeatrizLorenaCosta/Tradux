@@ -35,12 +35,13 @@ create table contas (
 
 create table documentos (
     id_documento INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(50) NOT NULL,
     documento_link VARCHAR(255) NOT NULL,
     documento_link_final VARCHAR(255),
-
     lingua_origem INT NOT NULL,
     lingua_destino INT NOT NULL,
-
+    valor float,
+    paginas INT,
     data_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
 
     estado ENUM(
@@ -70,6 +71,22 @@ create table equipas (
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
     FOREIGN KEY (documento_id) REFERENCES documentos(id_documento)
 );
+
+CREATE TABLE recibos (
+    id_recibo INT AUTO_INCREMENT PRIMARY KEY,
+    conta_id INT NOT NULL,
+    documento_id INT NOT NULL,
+    data_emissao DATETIME NOT NULL,
+    data_pagamento DATETIME NOT NULL,
+    nome_cliente VARCHAR(100) NOT NULL,
+    email_cliente VARCHAR(150) NOT NULL,
+    linguas VARCHAR(50),
+    quantidade VARCHAR(50),  -- Ex: 12 páginas ou 1 serviço
+    valor_total DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
+    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento)
+);
+
 
 create table perfis_linguisticos (
     id_perfil_linguistico INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,3 +177,35 @@ INSERT INTO equipas (conta_id, documento_id, ocupado) VALUES
     2, -- Documento finalizado
     FALSE
 );
+
+-- INSERT INTO recibos (
+--     conta_id,
+--     documento_id,
+--     numero_recibo,
+--     data_emissao,
+--     data_pagamento,
+--     nome_cliente,
+--     email_cliente,
+--     descricao_servico,
+--     id_servico,
+--     linguas,
+--     quantidade,
+--     valor_servico,
+--     valor_iva,
+--     valor_total
+-- ) VALUES (
+--     2,                          -- ID da conta do cliente (ex: Maria João Silva)
+--     7,                          -- ID do documento
+--     'REC-2026-0048',            -- Número do recibo
+--     '2026-01-06 00:00:00',      -- Data de emissão
+--     '2026-01-06 00:00:00',      -- Data de pagamento
+--     'Maria João Silva',         -- Nome do cliente
+--     'maria.silva@email.com',    -- Email do cliente
+--     'Tradução Certificada - Contrato Comercial',  -- Descrição do serviço
+--     '#TRX-2048',                -- ID do serviço
+--     'Português → Inglês',       -- Línguas
+--     '12 páginas',               -- Quantidade
+--     222.00,                     -- Valor do serviço
+--     50.37,                      -- IVA (23%)
+--     267.00                      -- Total pago
+-- );
