@@ -263,7 +263,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';

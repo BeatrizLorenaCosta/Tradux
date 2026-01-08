@@ -7,8 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarUtilizadores();
     carregarEquipas();
 
-
-
 });
 
 // Lista de todos os forms e respectivos botões
@@ -263,7 +261,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';
@@ -477,27 +475,6 @@ async function carregarEquipasLivres(select, tipo) {
         });
 }
 
-async function carregarDocumentosSelect(select) {
-    const res = await fetch('/api/admin/documentos', {
-        headers: getAuthHeaders()
-    });
-    const docs = await res.json();
-    console.log(docs);
-    console.log(select);
-
-    select.innerHTML = `<option value="">Selecionar</option>`;
-    docs
-        .filter(d => d.estado === 'em_analise')
-        .forEach(d => {
-            select.innerHTML += `
-                <option value="${d.id_documento}">
-                    #TRX-${String(d.id_documento).padStart(4, '0')}
-                </option>
-            `;
-        });
-}
-
-
 document.getElementById('form-criar-equipa')
     ?.addEventListener('submit', async e => {
         e.preventDefault();
@@ -523,88 +500,6 @@ document.getElementById('form-criar-equipa')
             alert(err.message);
         }
     });
-
-const formEquipaUser = document.getElementById('form-equipa-utilizador');
-
-if (formEquipaUser) {
-    const selectEquipa = formEquipaUser.querySelectorAll('select')[0];
-    const selectUser = formEquipaUser.querySelectorAll('select')[1];
-
-    carregarEquipasSelect(selectEquipa);
-
-    selectEquipa.addEventListener('change', e => {
-        const tipo = e.target.selectedOptions[0].dataset.tipo;
-        carregarUtilizadoresPorTipo(selectUser, tipo);
-    });
-
-    formEquipaUser.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        const equipaId = selectEquipa.value;
-        const conta_id = selectUser.value;
-
-        try {
-            const res = await fetch(
-                `/api/admin/equipas/${equipaId}/utilizadores`,
-                {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ conta_id })
-                }
-            );
-
-            if (!res.ok) throw new Error('Erro ao adicionar utilizador');
-
-            formEquipaUser.reset();
-            carregarEquipas();
-            alert('Utilizador adicionado à equipa');
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    });
-}
-
-const formDocEquipa = document.getElementById('form-doc-equipa');
-
-if (formDocEquipa) {
-    const selects = formDocEquipa.querySelectorAll('select');
-
-    const selDoc = selects[0];
-    const selTrad = selects[1];
-    const selRev = selects[2];
-
-    carregarDocumentosSelect(selDoc);
-    carregarEquipasLivres(selTrad, 'tradutores');
-    carregarEquipasLivres(selRev, 'revisores');
-
-    formDocEquipa.addEventListener('submit', async e => {
-        e.preventDefault();
-
-        try {
-            const res = await fetch('/api/admin/documentos/associar', {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({
-                    documento_id: selDoc.value,
-                    equipa_tradutores: selTrad.value,
-                    equipa_revisores: selRev.value
-                })
-            });
-
-            if (!res.ok) throw new Error('Erro ao associar documento');
-
-            formDocEquipa.reset();
-            carregarEquipas();
-            carregarDocumentos();
-            alert('Documento associado com sucesso');
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    });
-}
-
 
 
 

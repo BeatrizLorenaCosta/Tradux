@@ -141,27 +141,11 @@ INSERT INTO documentos (
     erros_encontrados,
     conta_id
 ) VALUES
-(
-    '/uploads/doc1_original.pdf',
-    NULL,
-    1, -- Português
-    2, -- Inglês
-    'em_traducao',
-    NULL,
-    3  -- João Cliente
-),
-(
-    '/uploads/doc2_original.docx',
-    '/uploads/doc2_final.docx',
-    2, -- Inglês
-    1, -- Português
-    'finalizado',
-    'Pequenos erros gramaticais corrigidos',
-    3  -- João Cliente
-),
+( '/uploads/doc1_original.pdf', NULL, 1, 2, 'em_traducao', NULL, 3),
+( '/uploads/doc2_original.docx', '/uploads/doc2_final.docx', 2, 1, 'finalizado', 'Pequenos erros gramaticais corrigidos', 3),
 ('/uploads/doc3_original.pdf', NULL, 1, 3, 'em_analise',NULL, 3),
-('/uploads/doc4_original.pdf', NULL, 1, 3, 'em_revisao',NULL, 3),
-('/uploads/doc5_original.pdf', NULL, 1, 3, 'traduzido',NULL, 3),
+('/uploads/doc4_original.pdf', NULL, 1, 3, 'em_analise',NULL, 3),
+('/uploads/doc5_original.pdf', NULL, 1, 3, 'em_analise',NULL, 3),
 ('/uploads/doc6_original.pdf', NULL, 1, 3, 'a_pagar',NULL, 3),
 ('/uploads/doc6_original.pdf', NULL, 1, 3, 'cancelado',NULL, 3);
 
@@ -171,7 +155,8 @@ INSERT INTO equipas (nome_equipa, tipo) VALUES
 ('Equipa de Revisores', 'revisores');
 
 INSERT INTO equipa_membros (equipa_id, conta_id) VALUES
-(1, 4); -- Carlos Revisor é membro da equipa de revisores
+(1, 4),
+(1, 5); -- Carlos Revisor é membro da equipa de revisores
 
 INSERT INTO equipa_documentos (equipa_id, documento_id) VALUES
 (1, 1), -- Equipa de tradutores trabalha no documento 1

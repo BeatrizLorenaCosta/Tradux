@@ -263,7 +263,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';
@@ -486,9 +486,7 @@ async function carregarDocumentosSelect(select) {
     console.log(select);
 
     select.innerHTML = `<option value="">Selecionar</option>`;
-    docs
-        .filter(d => d.estado === 'em_analise')
-        .forEach(d => {
+    docs.forEach(d => {
             select.innerHTML += `
                 <option value="${d.id_documento}">
                     #TRX-${String(d.id_documento).padStart(4, '0')}

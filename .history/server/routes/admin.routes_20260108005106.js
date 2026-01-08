@@ -75,10 +75,9 @@ router.get('/documentos', verifyToken, async (req, res) => {
             JOIN linguas lo ON lo.id_lingua = d.lingua_origem
             JOIN linguas ld ON ld.id_lingua = d.lingua_destino
             JOIN contas c ON c.id_conta = d.conta_id
-            LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
-            LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
-            ORDER BY d.data_envio DESC;
-
+            JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
+            JOIN equipas e ON e.id_equipa = ed.equipa_id
+            ORDER BY d.data_envio DESC
         `);
         res.json(rows);
     } catch (err) {
@@ -111,175 +110,16 @@ router.get('/users', verifyToken, verifyRole(1), async (req, res) => {
 router.get('/equipas', verifyToken, async (req, res) => {
     try {
         const [rows] = await db.query(`
-            SELECT
+            SELECT 
                 e.id_equipa,
                 e.nome_equipa,
-                e.tipo,
-
-                GROUP_CONCAT(DISTINCT c.nome_utilizador
-                    ORDER BY c.nome_utilizador
-                    SEPARATOR ', '
-                ) AS membros,
-
-                GROUP_CONCAT(DISTINCT l.nome_lingua
-                    ORDER BY l.nome_lingua
-                    SEPARATOR ', '
-                ) AS linguas,
-
-                COUNT(DISTINCT ed.documento_id) AS total_documentos,
-
-                CASE
-                    WHEN COUNT(DISTINCT ed.documento_id) >= 3 THEN TRUE
-                    ELSE FALSE
-                END AS ocupada
-
-            FROM equipas e
-            LEFT JOIN equipa_membros em ON em.equipa_id = e.id_equipa
-            LEFT JOIN contas c ON c.id_conta = em.conta_id
-            LEFT JOIN perfis_linguisticos pl ON pl.conta_id = c.id_conta
-            LEFT JOIN linguas l ON l.id_lingua IN (pl.lingua_principal, pl.lingua_secundaria)
-            LEFT JOIN equipa_documentos ed ON ed.equipa_id = e.id_equipa
-            GROUP BY e.id_equipa, e.nome_equipa, e.tipo`);
+                e tipo 
+            FROM equipas`);
         res.json(rows);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
-
-// Criar equipa
-router.post('/equipas', verifyToken, async (req, res) => {
-    const { nome_equipa, tipo } = req.body;
-
-    if (!nome_equipa || !tipo) {
-        return res.status(400).json({ message: 'Dados em falta.' });
-    }
-
-    try {
-        await db.query(
-            `INSERT INTO equipas (nome_equipa, tipo) VALUES (?, ?)`,
-            [nome_equipa, tipo]
-        );
-
-        res.status(201).json({ message: 'Equipa criada com sucesso.' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Adicionar Utilizador à Equipa
-router.post('/equipas/:idEquipa/utilizadores', verifyToken, async (req, res) => {
-    const { idEquipa } = req.params;
-    const { conta_id } = req.body;
-
-    try {
-        // Tipo da equipa
-        const [[equipa]] = await db.query(
-            `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-            [idEquipa]
-        );
-
-        if (!equipa) {
-            return res.status(404).json({ message: 'Equipa não encontrada.' });
-        }
-
-        // Verificar cargo do utilizador
-        const [[conta]] = await db.query(
-            `SELECT cargo_id FROM contas WHERE id_conta = ?`,
-            [conta_id]
-        );
-
-        const cargoEsperado =
-            equipa.tipo === 'tradutores' ? 3 : 4;
-
-        if (!conta || conta.cargo_id !== cargoEsperado) {
-            return res.status(400).json({
-                message: 'Utilizador incompatível com o tipo de equipa.'
-            });
-        }
-
-        // Inserir membro
-        await db.query(
-            `INSERT INTO equipa_membros (equipa_id, conta_id)
-             VALUES (?, ?)`,
-            [idEquipa, conta_id]
-        );
-
-        res.json({ message: 'Utilizador adicionado à equipa.' });
-    } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({
-                message: 'Utilizador já pertence a esta equipa.'
-            });
-        }
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Associar Documento a Equipas
-router.post('/documentos/associar', verifyToken, async (req, res) => {
-    const { documento_id, equipa_tradutores, equipa_revisores } = req.body;
-
-    if (!documento_id || !equipa_tradutores || !equipa_revisores) {
-        return res.status(400).json({ message: 'Dados incompletos.' });
-    }
-
-    const [[trad]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_tradutores]
-    );
-
-    const [[rev]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_revisores]
-    );
-
-    if (trad.tipo !== 'tradutores' || rev.tipo !== 'revisores') {
-        return res.status(400).json({
-            message: 'Tipos de equipa inválidos.'
-        });
-    }
-
-
-    try {
-        // Verificar ocupação das equipas
-        const [equipas] = await db.query(`
-            SELECT e.id_equipa, COUNT(ed.documento_id) AS total
-            FROM equipas e
-            LEFT JOIN equipa_documentos ed ON ed.equipa_id = e.id_equipa
-            WHERE e.id_equipa IN (?, ?)
-            GROUP BY e.id_equipa
-        `, [equipa_tradutores, equipa_revisores]);
-
-        for (const eq of equipas) {
-            if (eq.total >= 3) {
-                return res.status(409).json({
-                    message: 'Uma das equipas já está ocupada.'
-                });
-            }
-        }
-
-        // Associar documento
-        await db.query(
-            `INSERT INTO equipa_documentos (equipa_id, documento_id)
-             VALUES (?, ?), (?, ?)`,
-            [
-                equipa_tradutores, documento_id,
-                equipa_revisores, documento_id
-            ]
-        );
-
-        res.json({ message: 'Documento associado às equipas.' });
-    } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({
-                message: 'Documento já associado a esta equipa.'
-            });
-        }
-        res.status(500).json({ message: err.message });
-    }
-});
-
-
 
 // Apenas admins podem criar cargos
 router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {

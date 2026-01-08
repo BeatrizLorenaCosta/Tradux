@@ -63,21 +63,21 @@ router.get('/documentos', verifyToken, async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT
-                d.id_documento,
-                c.nome_utilizador AS cliente_nome,
-                d.estado,
-                d.data_envio,
-                lo.sigla AS lingua_origem,
-                ld.sigla AS lingua_destino,
-                ed.equipa_id,
-                e.nome_equipa
-            FROM documentos d
-            JOIN linguas lo ON lo.id_lingua = d.lingua_origem
-            JOIN linguas ld ON ld.id_lingua = d.lingua_destino
-            JOIN contas c ON c.id_conta = d.conta_id
-            LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
-            LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
-            ORDER BY d.data_envio DESC;
+    d.id_documento,
+    c.nome_utilizador AS cliente_nome,
+    d.estado,
+    d.data_envio,
+    lo.sigla AS lingua_origem,
+    ld.sigla AS lingua_destino,
+    ed.equipa_id,
+    e.nome_equipa
+FROM documentos d
+JOIN linguas lo ON lo.id_lingua = d.lingua_origem
+JOIN linguas ld ON ld.id_lingua = d.lingua_destino
+JOIN contas c ON c.id_conta = d.conta_id
+LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
+LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
+ORDER BY d.data_envio DESC;
 
         `);
         res.json(rows);

@@ -75,10 +75,9 @@ router.get('/documentos', verifyToken, async (req, res) => {
             JOIN linguas lo ON lo.id_lingua = d.lingua_origem
             JOIN linguas ld ON ld.id_lingua = d.lingua_destino
             JOIN contas c ON c.id_conta = d.conta_id
-            LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
-            LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
-            ORDER BY d.data_envio DESC;
-
+            JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
+            JOIN equipas e ON e.id_equipa = ed.equipa_id
+            ORDER BY d.data_envio DESC
         `);
         res.json(rows);
     } catch (err) {

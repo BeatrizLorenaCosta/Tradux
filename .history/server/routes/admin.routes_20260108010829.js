@@ -75,10 +75,9 @@ router.get('/documentos', verifyToken, async (req, res) => {
             JOIN linguas lo ON lo.id_lingua = d.lingua_origem
             JOIN linguas ld ON ld.id_lingua = d.lingua_destino
             JOIN contas c ON c.id_conta = d.conta_id
-            LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
-            LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
-            ORDER BY d.data_envio DESC;
-
+            JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
+            JOIN equipas e ON e.id_equipa = ed.equipa_id
+            ORDER BY d.data_envio DESC
         `);
         res.json(rows);
     } catch (err) {
@@ -162,119 +161,6 @@ router.post('/equipas', verifyToken, async (req, res) => {
 
         res.status(201).json({ message: 'Equipa criada com sucesso.' });
     } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Adicionar Utilizador à Equipa
-router.post('/equipas/:idEquipa/utilizadores', verifyToken, async (req, res) => {
-    const { idEquipa } = req.params;
-    const { conta_id } = req.body;
-
-    try {
-        // Tipo da equipa
-        const [[equipa]] = await db.query(
-            `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-            [idEquipa]
-        );
-
-        if (!equipa) {
-            return res.status(404).json({ message: 'Equipa não encontrada.' });
-        }
-
-        // Verificar cargo do utilizador
-        const [[conta]] = await db.query(
-            `SELECT cargo_id FROM contas WHERE id_conta = ?`,
-            [conta_id]
-        );
-
-        const cargoEsperado =
-            equipa.tipo === 'tradutores' ? 3 : 4;
-
-        if (!conta || conta.cargo_id !== cargoEsperado) {
-            return res.status(400).json({
-                message: 'Utilizador incompatível com o tipo de equipa.'
-            });
-        }
-
-        // Inserir membro
-        await db.query(
-            `INSERT INTO equipa_membros (equipa_id, conta_id)
-             VALUES (?, ?)`,
-            [idEquipa, conta_id]
-        );
-
-        res.json({ message: 'Utilizador adicionado à equipa.' });
-    } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({
-                message: 'Utilizador já pertence a esta equipa.'
-            });
-        }
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Associar Documento a Equipas
-router.post('/documentos/associar', verifyToken, async (req, res) => {
-    const { documento_id, equipa_tradutores, equipa_revisores } = req.body;
-
-    if (!documento_id || !equipa_tradutores || !equipa_revisores) {
-        return res.status(400).json({ message: 'Dados incompletos.' });
-    }
-
-    const [[trad]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_tradutores]
-    );
-
-    const [[rev]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_revisores]
-    );
-
-    if (trad.tipo !== 'tradutores' || rev.tipo !== 'revisores') {
-        return res.status(400).json({
-            message: 'Tipos de equipa inválidos.'
-        });
-    }
-
-
-    try {
-        // Verificar ocupação das equipas
-        const [equipas] = await db.query(`
-            SELECT e.id_equipa, COUNT(ed.documento_id) AS total
-            FROM equipas e
-            LEFT JOIN equipa_documentos ed ON ed.equipa_id = e.id_equipa
-            WHERE e.id_equipa IN (?, ?)
-            GROUP BY e.id_equipa
-        `, [equipa_tradutores, equipa_revisores]);
-
-        for (const eq of equipas) {
-            if (eq.total >= 3) {
-                return res.status(409).json({
-                    message: 'Uma das equipas já está ocupada.'
-                });
-            }
-        }
-
-        // Associar documento
-        await db.query(
-            `INSERT INTO equipa_documentos (equipa_id, documento_id)
-             VALUES (?, ?), (?, ?)`,
-            [
-                equipa_tradutores, documento_id,
-                equipa_revisores, documento_id
-            ]
-        );
-
-        res.json({ message: 'Documento associado às equipas.' });
-    } catch (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({
-                message: 'Documento já associado a esta equipa.'
-            });
-        }
         res.status(500).json({ message: err.message });
     }
 });

@@ -263,7 +263,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';
@@ -483,7 +483,7 @@ async function carregarDocumentosSelect(select) {
     });
     const docs = await res.json();
     console.log(docs);
-    console.log(select);
+    console.log(se);
 
     select.innerHTML = `<option value="">Selecionar</option>`;
     docs

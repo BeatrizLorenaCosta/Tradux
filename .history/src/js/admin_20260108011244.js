@@ -6,8 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarEstatisticasAdmin();
     carregarUtilizadores();
     carregarEquipas();
-
-
+    
 
 });
 
@@ -263,7 +262,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';
@@ -476,27 +475,6 @@ async function carregarEquipasLivres(select, tipo) {
             `;
         });
 }
-
-async function carregarDocumentosSelect(select) {
-    const res = await fetch('/api/admin/documentos', {
-        headers: getAuthHeaders()
-    });
-    const docs = await res.json();
-    console.log(docs);
-    console.log(select);
-
-    select.innerHTML = `<option value="">Selecionar</option>`;
-    docs
-        .filter(d => d.estado === 'em_analise')
-        .forEach(d => {
-            select.innerHTML += `
-                <option value="${d.id_documento}">
-                    #TRX-${String(d.id_documento).padStart(4, '0')}
-                </option>
-            `;
-        });
-}
-
 
 document.getElementById('form-criar-equipa')
     ?.addEventListener('submit', async e => {

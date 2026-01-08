@@ -263,7 +263,7 @@ async function carregarDocumentos() {
             `;
             return;
         }
-        
+
         documentos.forEach(doc => {
             let corEstado = '';
             let estadoLabel = '';
@@ -482,8 +482,7 @@ async function carregarDocumentosSelect(select) {
         headers: getAuthHeaders()
     });
     const docs = await res.json();
-    console.log(docs);
-    console.log(select);
+    
 
     select.innerHTML = `<option value="">Selecionar</option>`;
     docs
