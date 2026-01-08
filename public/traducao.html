@@ -73,30 +73,33 @@
                                     </p>
 
                                     <!-- Área de upload bonita com Bootstrap -->
-                                    <label for="documento"
-                                        class="upload-area d-block">
-                                        <i class="bi bi-cloud-upload mb-4"
-                                            style="font-size: 5rem; color: #0d6efd;"></i>
-                                        <div class="fs-4 fw-medium mb-2">Clique
-                                            para escolher o ficheiro</div>
-                                        <div class="text-muted mb-4">ou arraste
-                                            e solte o seu PDF aqui</div>
-                                        <button type="button"
-                                            class="btn btn-primary btn-lg px-5 rounded-pill">
-                                            ESCOLHER FICHEIRO
-                                        </button>
-                                    </label>
+                                <label for="documento" class="upload-area d-block text-center">
 
-                                    <input type="file" id="documento"
-                                        class="d-none" accept=".pdf">
-                                </div>
-                                <div
-                                    style="text-align: center; height: 100%; width: 100%;">
-                                    <button type="button"
-                                        class="btn btn-primary btn-lg px-5 rounded-pill"
-                                        onclick="document.getElementById('form-traducao')?.submit() || alert('Enviar tradução')">Enviar
-                                        para Tradução</button>
-                                </div>
+                                    <i class="bi bi-cloud-upload mb-4"
+                                    style="font-size: 5rem; color: #0d6efd;"></i>
+
+                                    <div class="fs-4 fw-medium mb-2">
+                                        Clique para escolher o ficheiro
+                                    </div>
+
+                                    <div class="text-muted mb-4">
+                                        ou arraste e solte o seu PDF aqui
+                                    </div>
+
+                                    <span class="btn btn-primary btn-lg px-5 rounded-pill">
+                                        ESCOLHER FICHEIRO
+                                    </span>
+
+                                </label>
+
+                                <input
+                                    type="file"
+                                    id="documento"
+                                    class="d-none"
+                                    accept=".pdf">
+                                <button id="btn-enviar" type="button" disabled>
+                                    Enviar para Tradução
+                                </button>
 
                             </div>
                             <p id="traducao-status" class="mt-4 fw-bold"></p>
@@ -112,6 +115,8 @@
         </footer>
 
         <!-- JS -->
+         <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
         <script src="../src/js/traducao.js" defer></script>
         <script src="../src/js/main.js" defer></script>
         <script>
