@@ -99,8 +99,11 @@ async function carregarDocumentos() {
             tbody.innerHTML += `
                 <tr>
                     <td>#TRX-${doc.id_documento}</td>
+                    <td>${doc.nome}</td>
                     <td>${doc.documento_link}</td>
                     <td>${doc.lingua_origem} → ${doc.lingua_destino}</td>
+                    <td>${doc.paginas}</td>
+                    <td>${doc.valor}</td>
                     <td><span class="badge bg-${corEstado}">${estadoLabel}</span></td>
                     <td>${new Date(doc.data_envio).toLocaleDateString('pt-PT')}</td>
                     <td>${acaoHTML}</td>
@@ -132,7 +135,14 @@ function getAcaoHTML(doc) {
     if (doc.estado === 'a_pagar') {
         return `
             <button class="btn btn-sm btn-danger"
-                onclick='irParaPagamento(${doc.id_documento}, "${doc.documento_link}", "${doc.lingua_origem}", "${doc.lingua_destino}", 267.00)'>
+                onclick='irParaPagamento(
+                    ${doc.id_documento}, 
+                    "${doc.documento_link}", 
+                    "${doc.lingua_origem}", 
+                    "${doc.lingua_destino}", 
+                    ${doc.valor}, 
+                    ${doc.paginas}
+                )'>
                 Pagar
             </button>
         `;
@@ -149,12 +159,13 @@ function getAcaoHTML(doc) {
     return `<button class="btn btn-sm btn-outline-secondary" disabled>—</button>`;
 }
 
-// Função para ir para pagamento
-function irParaPagamento(id_documento, link, lingua_origem, lingua_destino, valor) {
-    const pagamentoData = { id_documento, link, lingua_origem, lingua_destino, valor };
+
+function irParaPagamento(id_documento, link, lingua_origem, lingua_destino, valor, paginas) {
+    const pagamentoData = { id_documento, link, lingua_origem, lingua_destino, valor, paginas };
     localStorage.setItem('pagamento', JSON.stringify(pagamentoData));
     window.location.href = 'pagamento.html';
 }
+
 
 /* =========================
    ALTERAR DADOS

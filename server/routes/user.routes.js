@@ -37,9 +37,13 @@ router.get('/me/documentos', verifyToken, async (req, res) => {
         const [docs] = await db.query(`
             SELECT 
                 d.id_documento,
+                d.nome,
+                d.valor,
+                d.paginas,
                 d.documento_link,
                 d.documento_link_final,
                 d.estado,
+                d.paginas,
                 d.data_envio,
                 lo.sigla AS lingua_origem,
                 ld.sigla AS lingua_destino
@@ -52,9 +56,11 @@ router.get('/me/documentos', verifyToken, async (req, res) => {
 
         res.json(docs);
     } catch (err) {
-        res.status(500).json({ message: err.message });
+        console.error(err);
+        res.status(500).json({ message: 'Erro ao obter documentos', error: err.message });
     }
 });
+
 
 router.put('/me', verifyToken, async (req, res) => {
     const { nome_utilizador, email, password } = req.body;
