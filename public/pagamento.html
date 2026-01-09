@@ -48,24 +48,17 @@
                 <!-- Botões de Pagamento (falsos, só para demo) -->
                 <div class="d-grid gap-3">
 
-                    <!-- Botão PayPal (com logo oficial) -->
-                    <button onclick="pagarPaypal()" class="btn btn-warning btn-lg d-flex align-items-center justify-content-center shadow-sm botoesEscuros" 
-                            style="background-color: #ffc439; border: none; height: 60px; font-weight: bold;">
-                        <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" 
-                             alt="PayPal" style="height: 30px; margin-right: 12px;">
-                        Pagar com PayPal
-                    </button>
-
                     <!-- Botão Cartão de Crédito/Débito -->
                     <button onclick="pagarCartao()" class="btn btn-primary btn-lg d-flex align-items-center justify-content-center shadow-sm botoesEscuros"
-                            style="height: 60px;">
+                            style="height: 60px;"
+                            id="btn-pagar-cartao">
                         <i class="bi bi-credit-card-2-front fs-3 me-3"></i>
                         Pagar com Cartão de Crédito/Débito
                     </button>
 
                     <!-- Botão MB Way -->
                     <button  onclick="pagarMBWay()" class="btn btn-success btn-lg d-flex align-items-center justify-content-center shadow-sm botoesEscuros"
-                            style="background-color: #af0707; border: none; height: 60px; font-weight: bold;">
+                            style="background-color: #af0707; border: none; height: 60px; font-weight: bold;" id="btn-pagar-mbway">
                         <img src="https://endpoint-mbway.azureedge.net/wp-content/uploads/2021/02/MBWAYlogoBRANCO.png" 
                              alt="MB Way" style="height: 28px; margin-right: 12px; filter: brightness(10);">
                         Pagar com MB Way

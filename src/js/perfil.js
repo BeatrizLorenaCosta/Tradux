@@ -103,7 +103,7 @@ async function carregarDocumentos() {
                     <td>${doc.documento_link}</td>
                     <td>${doc.lingua_origem} → ${doc.lingua_destino}</td>
                     <td>${doc.paginas}</td>
-                    <td>${doc.valor}</td>
+                    <td>${doc.valor}€</td>
                     <td><span class="badge bg-${corEstado}">${estadoLabel}</span></td>
                     <td>${new Date(doc.data_envio).toLocaleDateString('pt-PT')}</td>
                     <td>${acaoHTML}</td>
@@ -133,10 +133,12 @@ function getEstadoInfo(estado) {
 // Função auxiliar para ação do documento
 function getAcaoHTML(doc) {
     if (doc.estado === 'a_pagar') {
-        return `
+        const nomeNovo = doc.nome.replace(/'/g, "\\'");
+        return `    
             <button class="btn btn-sm btn-danger"
                 onclick='irParaPagamento(
                     ${doc.id_documento}, 
+                    "${nomeNovo}", 
                     "${doc.documento_link}", 
                     "${doc.lingua_origem}", 
                     "${doc.lingua_destino}", 
@@ -160,8 +162,8 @@ function getAcaoHTML(doc) {
 }
 
 
-function irParaPagamento(id_documento, link, lingua_origem, lingua_destino, valor, paginas) {
-    const pagamentoData = { id_documento, link, lingua_origem, lingua_destino, valor, paginas };
+function irParaPagamento(id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas) {
+    const pagamentoData = { id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas };
     localStorage.setItem('pagamento', JSON.stringify(pagamentoData));
     window.location.href = 'pagamento.html';
 }
