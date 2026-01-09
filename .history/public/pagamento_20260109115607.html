@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradux | Pagamento</title>
+
+    <!-- Teu CSS -->
+    <link rel="stylesheet" href="../src/css/style.css">
+    
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+    <header>
+        <div class="container-header">
+            <a href="index.html">
+                <img src="../src/img/titulo.png" alt="Logo Tradux" class="logo">
+            </a>
+
+            <nav class="nav" aria-label="Navegação principal">
+                <a href="index.html" class="nav-btn">Início</a>
+                <a href="quem-somos.html" class="nav-btn">Quem Somos</a>
+                <a href="traducao.html" class="nav-btn">Tradução</a>
+                <a href="perfil.html" class="nav-btn">Perfil</a>
+                <a href="login-signup.html" class="nav-btn">Login & Signup</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div style="padding: 60px 20px;">
+            <div class="containerSessao">
+                <div class="text-center mb-5">
+                    <h1 class="display-6 fw-bold text-primary mb-3">Finalizar Pagamento</h1>
+                    <p class="text-muted lead">Escolha o método de pagamento preferido</p>
+                </div>
+
+                <!-- Resumo do pedido -->
+                <div class="bg-light p-4 rounded mb-5 text-center">
+                    <!-- O JS vai preencher o conteúdo aqui -->
+                </div>
+
+
+                <!-- Botões de Pagamento (falsos, só para demo) -->
+                <div class="d-grid gap-3">
+
+                    <!-- Botão Cartão de Crédito/Débito -->
+                    <button onclick="pagarCartao()" class="btn btn-primary btn-lg d-flex align-items-center justify-content-center shadow-sm botoesEscuros"
+                            style="height: 60px;"
+                            id="btn-pagar-cartao">
+                        <i class="bi bi-credit-card-2-front fs-3 me-3"></i>
+                        Pagar com Cartão de Crédito/Débito
+                    </button>
+
+                    <!-- Botão MB Way -->
+                    <button  onclick="pagarMBWay()" class="btn btn-success btn-lg d-flex align-items-center justify-content-center shadow-sm botoesEscuros"
+                            style="background-color: #af0707; border: none; height: 60px; font-weight: bold;" id="btn-pagar-mbway">
+                        <img src="https://endpoint-mbway.azureedge.net/wp-content/uploads/2021/02/MBWAYlogoBRANCO.png" 
+                             alt="MB Way" style="height: 28px; margin-right: 12px; filter: brightness(10);">
+                        Pagar com MB Way
+                    </button>
+                </div>
+
+                <!-- Mensagem de segurança -->
+                <div class="text-center mt-5 text-muted small">
+                    <i class="bi bi-shield-lock-fill me-2"></i>
+                    Pagamento seguro
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 Tradux. Todos os direitos reservados.
+    </footer>
+    
+    <script src="../src/js/main.js" defer></script>
+    
+</body>
+</html>

@@ -1,0 +1,575 @@
+/* Estilos baseados nos seus forms: cores brancas, fonts simples, botões com hover. Responsivo. */
+
+:root {
+    --primary: #007bff;
+    --secondary: #6c757d;
+    --success: #28a745;
+    --danger: #dc3545;
+    --warning: #ffc107;
+    --info: #17a2b8;
+    --light: #f8f9fa;
+    --dark: #343a40;
+    --font-family: Tahoma, sans-serif;
+    --radius: 10px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* body {
+
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+    color: #333;
+} */
+
+body {
+    font-family: Tahoma, sans-serif; /* Inspirado nas fonts dos seus forms */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Garante pelo menos a altura da viewport */
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3ecff 100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;  /* <--- Esta linha resolve! */
+}
+
+main {
+    flex: 1; /* Isso é o segredo! O main ocupa todo o espaço disponível */
+}
+
+header {
+    background-color: #f8f8f8;
+    border-bottom: 1px solid #ddd;
+}
+
+header h1 {
+    margin: 0;
+    color: var(--primary);
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: flex-end;
+}
+
+nav li {
+    margin-left: 20px;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    padding: 10px;
+}
+
+nav a:hover {
+    background-color: #eee;
+}
+
+.nav {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center; /* centraliza os botões */
+  margin: 1rem 0;
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid var(--primary);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  transition: 0.2s;
+  margin-left: 5px;
+}
+
+.botoesEscuros{
+    background-color: #007bff;
+    color: white;
+    border:  #007bff;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    
+}
+
+.botoesEscuros:hover{
+    background-color: #0056b3;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: #000000 0px 0px 5px;
+    
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: #000000 0px 0px 5px;
+}
+
+.menu-toggle {
+    display: none; /* Escondido em desktop */
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.section {
+    padding: 20px 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px); /* Desliza para baixo */
+    transition:
+        opacity 0.5s ease-in-out,
+        visibility 0.5s ease-in-out,
+        transform 0.5s ease-in-out;
+}
+
+.section.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0); /* Volta à posição original */
+}
+
+.hidden {
+    display: none; /* Para mostrar/ocultar seções via JS */
+}
+
+
+.section {
+    padding: 20px 10px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px); /* Desliza para baixo */
+    transition:
+        opacity 0.5s ease-in-out,
+        visibility 0.5s ease-in-out,
+        transform 0.5s ease-in-out;
+}
+
+form {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: px solid #000000;
+    border-radius: 4px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.error {
+    color: red;
+    font-size: 12px;
+}
+
+
+/* Footer fica sempre no fundo */
+footer {
+    background-color: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    padding: 15px 0;
+    font-size: 0.9rem;
+    color: #333;
+    margin-top: auto; /* Reforça que o footer vai para o fim */
+}
+
+/* Responsivo (mobile-first) */
+@media (max-width: 768px) {
+    nav ul {
+        display: none; /* Esconde menu em mobile */
+        flex-direction: column;
+    }
+
+    nav ul.show {
+        display: flex; /* Mostra quando toggle */
+    }
+
+    .menu-toggle {
+        display: block;
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+}
+
+/* Estilos para replicar exatamente a imagem fornecida */
+
+.hero-section {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(135deg, #e0f7ff 0%, #a0d8ef 100%); /* Gradient azul claro como na imagem */
+    padding-top: 100px; /* Espaço para o header fixo */
+}
+
+.hero-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+/* Botões como na imagem: Login outline, Sign Up filled */
+.btn-outline {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* Ajustes para mobile */
+@media (max-width: 992px) {
+    .row {
+        flex-direction: column-reverse;
+    }
+    .col-lg-6 {
+        margin-bottom: 2rem;
+    }
+}
+
+.carousel {
+    width: 350px;
+    height: 250px;
+    overflow: hidden;
+    margin: 0 auto;
+    border: 1px solid #ccc; /* Adicionei borda para debug */
+}
+
+.slides {
+    display: flex;
+    width: calc(350px * 4); /* Use pixels fixos para evitar cálculos errados */
+    height: 250px; /* Altura fixa igual ao .carousel */
+    transition: transform 0.5s ease-in-out;
+}
+
+.slides img {
+    width: 350px; /* Largura fixa igual ao .carousel */
+    height: 250px; /* Altura fixa igual ao .carousel */
+    object-fit: cover; /* Usar 'cover' para preencher todo o espaço */
+    flex-shrink: 0; /* Evita que as imagens sejam comprimidas */
+}
+
+
+
+header .container-header {
+    padding: 10px 30px 15px 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 200px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: var(--shadow);
+    width: 100%;
+}
+
+.containerPaginaInicial , .containerQuemSomos{
+    margin-top: 30px;
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+}
+
+.containerPaginaInicial , .containerQuemSomos p{
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: #000000;
+
+}
+
+.containerSessao {
+    width: 100%;
+    max-width: 460px;  
+    padding: 40px;
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin: 0 auto;     
+}
+
+.redirect{
+    color: var(--primary);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* #login{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#signup{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+} */
+
+
+.logo{
+    width: 150px;
+    height: 50px;
+    margin-top: 10px;
+    cursor: pointer;
+}   
+
+/* Área de upload personalizada - sem Bootstrap */
+.upload-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  max-width: 560px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.upload-area {
+    border: 3px dashed #0d6efd;
+    border-radius: 1rem;
+    background-color: #f0f8ff;
+    padding: 4rem 2rem;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    background-color: #e3f2fd;
+}
+
+.cloud-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 30px;
+  display: block;
+}
+
+.upload-text {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.upload-subtext {
+  color: #666;
+  font-size: 1rem;
+  margin-bottom: 30px;
+}
+
+.upload-button {
+  background-color: #1e90ff;
+  color: white;
+  border: none;
+  padding: 14px 40px;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-weight: 500;
+}
+
+.upload-button:hover {
+  background-color: #0d7ee6;
+}
+
+.file-input {
+  display: none;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .upload-container {
+    padding: 30px 20px;
+  }
+  .upload-area {
+    padding: 40px 15px;
+  }
+}
+
+.botaoEnviarFicheiro{
+    background: var(--primary);
+    border: none;
+    color: white;
+    box-shadow: 0 10px 20px rgba(0, 163, 255, 0.3);
+}
+
+/* === PAINEL ADMIN - SIDEBAR === */
+.sidebar {
+    width: 260px;
+    background: #1e293b;
+    color: white;
+    height: -webkit-fill-available;
+    position: fixed;
+    top: 0;
+    left: 0;
+    padding-top: 20px;
+    transition: transform 0.3s ease;
+    z-index: 1000;
+}
+
+.sidebar .logo {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 20px;
+    border-bottom: 1px solid #334155;
+}
+
+.nav-menu .nav-item {
+    padding: 14px 24px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.nav-menu .nav-item:hover,
+.nav-menu .nav-item.active {
+    background: rgba(255,255,255,0.1);
+}
+
+.nav-menu .nav-item i {
+    width: 24px;
+}
+
+/* Main content do admin */
+.main-content {
+    margin-left: 260px;
+    transition: margin-left 0.3s ease;
+}
+
+/* Responsivo - mobile */
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+    .main-content {
+        margin-left: 0;
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+}
+
+.admin-page {
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Estilo para a lista de dados no perfil */
+.user-data-list {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.data-row:last-child {
+    border-bottom: none;
+}
+
+.data-label {
+    font-weight: 600;
+    color: #495057;
+    flex: 0 0 40%; /* ou ajuste conforme o tamanho desejado */
+    padding-right: 20px;
+}
+
+.data-value {
+    flex: 1;
+    color: #212529;
+    text-align: right;
+}
+
+/* Botões no estilo da imagem */
+.btn-outline-primary {
+    border-color: #0d6efd;
+    color: #0d6efd;
+    font-weight: 500;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    font-weight: 500;
+}
+
+.btn-secondary:hover {
+    background-color: #5c636a;
+    border-color: #5c636a;
+}
+
+/* Ajuste para mobile */
+@media (max-width: 576px) {
+    .data-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .data-value {
+        text-align: left;
+    }
+    .btn-lg {
+        width: 100%;
+    }
+}
