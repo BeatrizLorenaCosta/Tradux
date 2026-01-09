@@ -152,11 +152,11 @@ INSERT INTO perfis_linguisticos (conta_id, lingua_principal, lingua_secundaria) 
 INSERT INTO documentos (nome_documento, documento_link, documento_link_final, lingua_origem, lingua_destino, valor, paginas, estado, erros_encontrados, conta_id) VALUES
 ('Documento 1', '/uploads/doc1_original.pdf', NULL, 1, 2, 25.00, 5, 'a_pagar', NULL, 6),
 ('Documento 2', '/uploads/doc2_original.docx', '/uploads/doc2_final.docx', 2, 1, 40.00, 8, 'finalizado', 'Pequenos erros gramaticais corrigidos', 6),
-('Documento 3', '/uploads/doc3_original.pdf', NULL, 1, 3, 30.00, 6, 'em_analise', NULL, 6),
+('Documento 3', '/uploads/doc3_original.pdf', NULL, 1, 3, 0.00, 6, 'em_analise', NULL, 6),
 ('Documento 4', '/uploads/doc4_original.pdf', NULL, 1, 3, 35.00, 7, 'em_revisao', NULL, 6),
 ('Documento 5', '/uploads/doc5_original.pdf', NULL, 1, 3, 20.00, 4, 'traduzido', NULL, 6),
-('Documento 6', '/uploads/doc6_original.pdf', NULL, 1, 3, 50.00, 10, 'a_pagar', NULL, 6),
-('Documento 7', '/uploads/doc7_original.pdf', NULL, 1, 3, 0.00, 3, 'cancelado', NULL, 6);
+('Documento 6', '/uploads/doc6_original.pdf', NULL, 1, 3, 50.00, 10, 'pago', NULL, 6),
+('Documento 7', '/uploads/doc7_original.pdf', NULL, 1, 3, 30.00, 3, 'cancelado', NULL, 6);
 
 
 INSERT INTO equipas (nome_equipa, tipo) VALUES
