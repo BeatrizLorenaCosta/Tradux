@@ -30,8 +30,7 @@ function inicializarSidebar() {
             item.addEventListener('click', () => {
                 const sectionId = item.dataset.sectionId;
 
-                document.getElementById('userPageTitle').textContent =
-                    item.textContent.trim();
+                document.getElementById('userPageTitle').textContent = item.textContent.trim();
 
                 document.querySelectorAll('#userSidebar .nav-item')
                     .forEach(i => i.classList.remove('active'));
@@ -55,22 +54,14 @@ function inicializarSidebar() {
 
 async function carregarPerfil() {
     try {
-        const res = await fetch('/api/users/me', {
-            headers: getAuthHeaders()
-        });
-
+        const res = await fetch('/api/users/me', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('Sessão inválida');
 
         const user = await res.json();
 
-        // Header
-        document.getElementById('userNameDisplay').textContent =
-            `Olá, ${user.nome_utilizador}`;
+        document.getElementById('userNameDisplay').textContent = `Olá, ${user.nome_utilizador}`;
+        document.querySelector('.user-avatar').textContent = user.nome_utilizador.substring(0, 2).toUpperCase();
 
-        document.querySelector('.user-avatar').textContent =
-            user.nome_utilizador.substring(0, 2).toUpperCase();
-
-        // Formulário
         document.getElementById('perfil-nome').value = user.nome_utilizador;
         document.getElementById('perfil-email').value = user.email;
 
@@ -85,10 +76,7 @@ async function carregarPerfil() {
 
 async function carregarDocumentos() {
     try {
-        const res = await fetch('/api/users/me/documentos', {
-            headers: getAuthHeaders()
-        });
-
+        const res = await fetch('/api/users/me/documentos', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('Erro ao carregar documentos');
 
         const documentos = await res.json();
@@ -98,87 +86,27 @@ async function carregarDocumentos() {
         if (!documentos.length) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        Nenhum documento encontrado.
-                    </td>
+                    <td colspan="6" class="text-center text-muted">Nenhum documento encontrado.</td>
                 </tr>
             `;
             return;
         }
 
         documentos.forEach(doc => {
-            let corEstado = '';
-            let estadoLabel = '';
-
-            switch (doc.estado) {
-                case 'em_analise':
-                    estadoLabel = 'Em Análise';
-                    corEstado = 'secondary';
-                    break;
-                case 'em_traducao':
-                    estadoLabel = 'Em Tradução';
-                    corEstado = 'warning';
-                    break;
-                case 'em_revisao':
-                    estadoLabel = 'Em Revisão';
-                    corEstado = 'info';
-                    break;
-                case 'finalizado':
-                    estadoLabel = 'Finalizado';
-                    corEstado = 'success';
-                    break;
-                case 'traduzido':
-                    estadoLabel = 'Traduzido';
-                    corEstado = 'primary';
-                    break;
-                case 'a_pagar':
-                    estadoLabel = 'A Pagar';
-                    corEstado = 'danger';
-                    break;
-                case 'cancelado':
-                    estadoLabel = 'Cancelado';
-                    corEstado = 'dark';
-                    break;
-            }
-
-
-            let acaoHTML = '';
-
-            if (doc.documento_link_final) {
-                acaoHTML = `
-                    <a href="${doc.documento_link_final}"
-                    class="btn btn-sm btn-success">
-                    Descarregar
-                    </a>
-                `;
-            } else if (doc.estado === 'a_pagar') {
-                acaoHTML = `
-                    <button class="btn btn-sm btn-danger">
-                        Pagar
-                    </button>
-                `;
-            } else {
-                acaoHTML = `
-                    <button class="btn btn-sm btn-outline-secondary" disabled>
-                        —
-                    </button>
-                `;
-            }
+            const { label: estadoLabel, cor: corEstado } = getEstadoInfo(doc.estado);
+            const acaoHTML = getAcaoHTML(doc);
 
             tbody.innerHTML += `
                 <tr>
                     <td>#TRX-${doc.id_documento}</td>
+                    <td>${doc.nome}</td>
                     <td>${doc.documento_link}</td>
                     <td>${doc.lingua_origem} → ${doc.lingua_destino}</td>
-                    <td>
-                        <span class="badge bg-${corEstado}">
-                            ${estadoLabel}
-                        </span>
-                    </td>
+                    <td>${doc.paginas}</td>
+                    <td>${doc.valor}€</td>
+                    <td><span class="badge bg-${corEstado}">${estadoLabel}</span></td>
                     <td>${new Date(doc.data_envio).toLocaleDateString('pt-PT')}</td>
-                    <td>
-                        ${acaoHTML}
-                    </td>
+                    <td>${acaoHTML}</td>
                 </tr>
             `;
         });
@@ -187,6 +115,59 @@ async function carregarDocumentos() {
         console.error(err);
     }
 }
+
+// Função auxiliar para estado
+function getEstadoInfo(estado) {
+    const estados = {
+        em_analise: { label: 'Em Análise', cor: 'secondary' },
+        em_traducao: { label: 'Em Tradução', cor: 'warning' },
+        em_revisao: { label: 'Em Revisão', cor: 'info' },
+        finalizado: { label: 'Finalizado', cor: 'success' },
+        traduzido: { label: 'Traduzido', cor: 'primary' },
+        a_pagar: { label: 'A Pagar', cor: 'danger' },
+        cancelado: { label: 'Cancelado', cor: 'dark' }
+    };
+    return estados[estado] || { label: 'Desconhecido', cor: 'secondary' };
+}
+
+// Função auxiliar para ação do documento
+function getAcaoHTML(doc) {
+    if (doc.estado === 'a_pagar') {
+        const nomeNovo = doc.nome.replace(/'/g, "\\'");
+        return `    
+            <button class="btn btn-sm btn-danger"
+                onclick='irParaPagamento(
+                    ${doc.id_documento}, 
+                    "${nomeNovo}", 
+                    "${doc.documento_link}", 
+                    "${doc.lingua_origem}", 
+                    "${doc.lingua_destino}", 
+                    ${doc.valor}, 
+                    ${doc.paginas}
+                )'>
+                Pagar
+            </button>
+        `;
+    }
+
+    if (doc.documento_link_final) {
+        return `
+            <a href="${doc.documento_link_final}" class="btn btn-sm btn-success">
+                Descarregar documento
+            </a>
+        `;
+    }
+
+    return `<button class="btn btn-sm btn-outline-secondary" disabled>—</button>`;
+}
+
+
+function irParaPagamento(id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas) {
+    const pagamentoData = { id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas };
+    localStorage.setItem('pagamento', JSON.stringify(pagamentoData));
+    window.location.href = 'pagamento.html';
+}
+
 
 /* =========================
    ALTERAR DADOS
@@ -208,14 +189,8 @@ function configurarFormularioDados() {
             return;
         }
 
-        const body = {
-            nome_utilizador: nome,
-            email
-        };
-
-        if (password) {
-            body.password = password;
-        }
+        const body = { nome_utilizador: nome, email };
+        if (password) body.password = password;
 
         try {
             const res = await fetch(`/api/users/me`, {
@@ -225,7 +200,6 @@ function configurarFormularioDados() {
             });
 
             if (!res.ok) throw new Error();
-
             alert('Dados atualizados com sucesso.');
             document.getElementById('perfil-password').value = '';
             carregarPerfil();
@@ -242,15 +216,10 @@ function configurarFormularioDados() {
 
 function sairLogin() {
     document.getElementById('logoutUserBtn')?.addEventListener('click', () => {
-        // Remove token / sessão
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-
-        // Opcional: limpar dados visuais do utilizador
         document.getElementById('userNameDisplay').textContent = '';
         document.querySelector('.user-avatar').textContent = '';
-        
-        // Redirecionar para login
         window.location.href = 'login-signup.html';
     });
 }
