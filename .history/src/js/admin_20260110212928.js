@@ -271,7 +271,7 @@ async function carregarEquipas() {
             <tr>
                 <td>#${formatarId(e.id_equipa)}</td>
                 <td>${e.nome_equipa}</td>
-                <td>${e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)}</td>
+                <td>${e.tipo}</td>
                 <td>${e.membros || 'Não tem membros associados'}</td>
                 <td>${e.linguas || 'Não tem linguas'}</td>
                 <td>${e.documentos || 'Não tem documento associados'}</td>
@@ -314,6 +314,7 @@ async function carregarEquipasLivres(select, tipo) {
     const equipas = await apiFetch('/api/admin/equipas');
 
     const linguasDoc = JSON.parse(select.dataset.linguasDocumento || '[]');
+    console.log(linguasDoc);
 
     select.innerHTML = `<option value="">Selecionar</option>`;
 
@@ -321,8 +322,7 @@ async function carregarEquipasLivres(select, tipo) {
         .filter(e => {
             if (e.tipo !== tipo) return false;
             if (e.ocupada) return false;
-            if (!linguasDoc.length) return true;
-            if (!e.siglas_linguas) return false;
+            if (!linguasDoc.length) return true;if (!e.siglas_linguas) return false;
 
             const linguasEquipa = e.siglas_linguas
                 .split(',')

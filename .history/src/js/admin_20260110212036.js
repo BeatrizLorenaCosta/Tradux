@@ -271,7 +271,7 @@ async function carregarEquipas() {
             <tr>
                 <td>#${formatarId(e.id_equipa)}</td>
                 <td>${e.nome_equipa}</td>
-                <td>${e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)}</td>
+                <td>${e.tipo}</td>
                 <td>${e.membros || 'Não tem membros associados'}</td>
                 <td>${e.linguas || 'Não tem linguas'}</td>
                 <td>${e.documentos || 'Não tem documento associados'}</td>
@@ -321,8 +321,9 @@ async function carregarEquipasLivres(select, tipo) {
         .filter(e => {
             if (e.tipo !== tipo) return false;
             if (e.ocupada) return false;
-            if (!linguasDoc.length) return true;
-            if (!e.siglas_linguas) return false;
+
+            // se o documento não tem linguas definidas, não filtra
+            if (!linguasDoc.length || !e.siglas_linguas) return true;
 
             const linguasEquipa = e.siglas_linguas
                 .split(',')
@@ -354,8 +355,8 @@ async function onDocumentoChange(selectDoc, selectEquipa, tipo) {
     const doc = await apiFetch(`/api/admin/documentos/${docId}`);
 
     selectEquipa.dataset.linguasDocumento = JSON.stringify([
-        doc.lingua_origem,
-        doc.lingua_destino
+        doc.sigla_origem,
+        doc.sigla_destino
     ]);
 
     await carregarEquipasLivres(selectEquipa, tipo);
@@ -620,7 +621,6 @@ initCamposDependentes(
     'select[name="equipa_id"]',
     (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'revisores')
 );
-
 // form-criar-equipa: primeiro select = tipo, segundo input = nome_equipa
 initCamposDependentes(
     'form-criar-equipa',

@@ -271,7 +271,7 @@ async function carregarEquipas() {
             <tr>
                 <td>#${formatarId(e.id_equipa)}</td>
                 <td>${e.nome_equipa}</td>
-                <td>${e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)}</td>
+                <td>${e.tipo}</td>
                 <td>${e.membros || 'Não tem membros associados'}</td>
                 <td>${e.linguas || 'Não tem linguas'}</td>
                 <td>${e.documentos || 'Não tem documento associados'}</td>
@@ -313,28 +313,13 @@ async function carregarEquipasSelect(select) {
 async function carregarEquipasLivres(select, tipo) {
     const equipas = await apiFetch('/api/admin/equipas');
 
-    const linguasDoc = JSON.parse(select.dataset.linguasDocumento || '[]');
-
     select.innerHTML = `<option value="">Selecionar</option>`;
-
     equipas
-        .filter(e => {
-            if (e.tipo !== tipo) return false;
-            if (e.ocupada) return false;
-            if (!linguasDoc.length) return true;
-            if (!e.siglas_linguas) return false;
-
-            const linguasEquipa = e.siglas_linguas
-                .split(',')
-                .map(l => l.trim());
-
-            // equipa tem TODAS as linguas do documento?
-            return linguasDoc.every(l => linguasEquipa.includes(l));
-        })
+        .filter(e => e.tipo === tipo && !e.ocupada)
         .forEach(e => {
             select.innerHTML += `
                 <option value="${e.id_equipa}">
-                    ${e.nome_equipa} (${e.siglas_linguas})
+                    ${e.nome_equipa} (${e.siglas_linguas ? e.siglas_linguas : 'Não escolheu linguas'})
                 </option>
             `;
         });
@@ -344,22 +329,6 @@ async function carregarEquipasLivres(select, tipo) {
    DOCUMENTOS
 ========================= */
 
-async function onDocumentoChange(selectDoc, selectEquipa, tipo) {
-    const docId = selectDoc.value;
-    if (!docId) {
-        selectEquipa.innerHTML = `<option value="">Selecionar</option>`;
-        return;
-    }
-
-    const doc = await apiFetch(`/api/admin/documentos/${docId}`);
-
-    selectEquipa.dataset.linguasDocumento = JSON.stringify([
-        doc.lingua_origem,
-        doc.lingua_destino
-    ]);
-
-    await carregarEquipasLivres(selectEquipa, tipo);
-}
 
 
 async function carregarDocumentosRecentes() {
@@ -611,14 +580,15 @@ initCamposDependentes(
     'form-doc-equipa-tradutores',
     'select[name="documento_id"]',
     'select[name="equipa_id"]',
-    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'tradutores')
+    (segundo, primeiro) => carregarEquipasLivres(segundo, 'tradutores')
 );
 
+// form-doc-equipa-revisores: primeiro select = documento, segundo select = equipa
 initCamposDependentes(
     'form-doc-equipa-revisores',
     'select[name="documento_id"]',
     'select[name="equipa_id"]',
-    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'revisores')
+    (segundo, primeiro) => carregarEquipasLivres(segundo, 'revisores')
 );
 
 // form-criar-equipa: primeiro select = tipo, segundo input = nome_equipa

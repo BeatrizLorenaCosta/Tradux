@@ -271,7 +271,7 @@ async function carregarEquipas() {
             <tr>
                 <td>#${formatarId(e.id_equipa)}</td>
                 <td>${e.nome_equipa}</td>
-                <td>${e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1)}</td>
+                <td>${e.tipo}</td>
                 <td>${e.membros || 'Não tem membros associados'}</td>
                 <td>${e.linguas || 'Não tem linguas'}</td>
                 <td>${e.documentos || 'Não tem documento associados'}</td>
