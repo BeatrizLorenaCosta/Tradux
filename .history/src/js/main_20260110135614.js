@@ -96,16 +96,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (user) {
-           
+            // Perfil e Tradução
+            nav.appendChild(criarLink('traducao.html', 'Tradução'));
+            nav.appendChild(criarLink('perfil.html', 'Perfil'));
+            
 
             // Admin (apenas cargo_id === 1)
             if (user.cargo_id === 1) {
-                nav.appendChild(criarLink('perfil.html', 'Perfil'));
                 nav.appendChild(criarLink('admin.html', 'Admin'));
-            } else {
-                nav.appendChild(criarLink('traducao.html', 'Tradução'));
-                nav.appendChild(criarLink('perfil.html', 'Perfil'));
-            }
+            } el
 
             // Logout
             const logoutLink = document.createElement('a');
@@ -121,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             nav.appendChild(logoutLink);
+
         } else {
             // Login & Signup
             nav.appendChild(criarLink('login-signup.html', 'Login & Signup'));

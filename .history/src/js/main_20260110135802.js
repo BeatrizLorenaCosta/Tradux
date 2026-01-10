@@ -106,7 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 nav.appendChild(criarLink('traducao.html', 'Tradução'));
                 nav.appendChild(criarLink('perfil.html', 'Perfil'));
             }
-
             // Logout
             const logoutLink = document.createElement('a');
             logoutLink.href = '#';
@@ -121,6 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             nav.appendChild(logoutLink);
+
         } else {
             // Login & Signup
             nav.appendChild(criarLink('login-signup.html', 'Login & Signup'));
