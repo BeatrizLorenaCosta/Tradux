@@ -60,10 +60,6 @@
                             <div class="nav-item" data-section-id="equipas">
                                 <i class="fas fa-user-friends me-3"></i> Equipas
                             </div>
-                            <div class="nav-item" data-section-id="estado">
-                                <i class="fas fa-tasks me-3"></i> Estado
-                                Documentos
-                            </div>
                             <div class="nav-item" data-section-id="config">
                                 <i class="fas fa-cog me-3"></i> Configurações
                             </div>
@@ -504,20 +500,188 @@
 
                             </div>
 
-                            <div id="estado" class="admin-page"
-                                style="display: none;">
-                                <h1 class="display-6 mb-4">Estado dos
-                                    Documentos</h1>
-                                <p>Monitorização em tempo real...</p>
+                            <div id="config" class="admin-page" style="display: none;">
+                                <h1 class="display-6 mb-4">Configurações</h1>
+                                <p>Definições do sistema: cargos, línguas, preços, limites, etc.</p>
+
+                                <div class="card border-0 shadow-sm mb-4">
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Configuração</th>
+                                                        <th>Ações</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Cargos</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary" onclick="abrirFormConfig('cargo')">Editar</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Línguas</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary" onclick="abrirFormConfig('linguas')">Editar</button>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Preços / Valores</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary" onclick="abrirFormConfig('precos')">Editar</button>
+                                                        </td>
+                                                    </tr>
+                                                    <!-- <tr>
+                                                        <td>Configurações Gerais</td>
+                                                        <td>
+                                                            <button class="btn btn-sm btn-primary" onclick="abrirFormConfig('geral')">Editar</button>
+                                                        </td>
+                                                    </tr> -->
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- FORMULÁRIOS -->
+
+                                <!-- 1. Cargos -->
+                                <div id="form-config-cargo" class="form-config card border-0 shadow-sm mb-4" style="display:none;">
+                                    <div class="card-body">
+                                        <h5>Cargos</h5>
+                                        <table class="table table-hover mb-3" id="tabela-cargos">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nome do Cargo</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- JS irá preencher -->
+                                            </tbody>
+                                        </table>
+                                        <form id="form-adicionar-cargos" class="row g-2 mb-2">
+                                            <div class="col-auto">
+                                                <input type="text" name="nome_cargo" class="form-control" placeholder="Nome do cargo" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+                                            </div>
+                                        </form>
+                                        <form id="form-alterar-cargos" class="row g-2" style="display:none;">
+                                            <div class="col-auto">
+                                                <input type="hidden" name="id_cargo">
+                                                <input type="text" name="nome_cargo" class="form-control" placeholder="Nome do cargo" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" class="btn btn-primary btn-sm">Alterar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Línguas -->
+                                <div id="form-config-linguas" class="form-config card border-0 shadow-sm mb-4" style="display:none;">
+                                    <div class="card-body">
+                                        <h5>Línguas</h5>
+                                        <table class="table table-hover mb-3" id="tabela-linguas">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nome da Língua</th>
+                                                    <th>Sigla</th>
+                                                    <th>Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <!-- JS irá preencher -->
+                                            </tbody>
+                                        </table>
+                                        <form id="form-adicionar-linguas" class="row g-2 mb-2">
+                                            <div class="col-auto">
+                                                <input type="text" name="nome_lingua" class="form-control" placeholder="Nome da língua" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <input type="text" name="sigla" class="form-control" placeholder="Sigla" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+                                            </div>
+                                        </form>
+                                        <form id="form-alterar-linguas" class="row g-2" style="display:none;">
+                                            <div class="col-auto">
+                                                <input type="hidden" name="id_lingua">
+                                                <input type="text" name="nome_lingua" class="form-control" placeholder="Nome da língua" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <input type="text" name="sigla" class="form-control" placeholder="Sigla" required>
+                                            </div>
+                                            <div class="col-auto">
+                                                <button type="submit" class="btn btn-primary btn-sm">Alterar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Valores -->
+                                <div id="form-config-precos" class="form-config card border-0 shadow-sm mb-4" style="display:none;">
+                                    <div class="card-body">
+                                        <h5>Preços / Valores de Documentos</h5>
+                                        <table class="table table-hover mb-3" id="tabela-precos">
+                                            <thead>
+                                                <tr>
+                                                    <th>Palavras</th>
+                                                    <th>Valor (€)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>0 - 100</td>
+                                                    <td>5,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>101 - 500</td>
+                                                    <td>20,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>501 - 1000</td>
+                                                    <td>35,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>1001 - 2000</td>
+                                                    <td>60,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2001 - 5000</td>
+                                                    <td>120,00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>5001 +</td>
+                                                    <td>250,00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- 4. Configurações Gerais 
+                                <div id="form-config-geral" class="form-config card border-0 shadow-sm mb-4" style="display:none;">
+                                    <div class="card-body">
+                                        <h5>Configurações Gerais</h5>
+                                        <form id="form-geral" class="row g-2">
+                                            <div class="col-auto">
+                                                <label class="form-label">Limite de membros por equipa</label>
+                                                <input type="number" name="limite_membros" class="form-control" min="1" value="5" required>
+                                            </div>
+                                            <div class="col-auto align-self-end">
+                                                <button type="submit" class="btn btn-primary btn-sm">Salvar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>-->
                             </div>
 
-                            <div id="config" class="admin-page"
-                                style="display: none;">
-                                <h1
-                                    class="display-6 mb-4">Configurações</h1>
-                                <p>Definições do sistema, preços, línguas,
-                                    etc...</p>
-                            </div>
                         </div>
                     </div>
                 </div>

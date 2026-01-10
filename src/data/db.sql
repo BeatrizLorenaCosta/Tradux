@@ -18,8 +18,7 @@ create table cargo (
 create table linguas (
     id_lingua INT AUTO_INCREMENT PRIMARY KEY,
     nome_lingua VARCHAR(50) NOT NULL UNIQUE,
-    sigla VARCHAR(10),
-    contagem INT DEFAULT 0
+    sigla VARCHAR(10) NOT NULL
 );
 
 create table contas (

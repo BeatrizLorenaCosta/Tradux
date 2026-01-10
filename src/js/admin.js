@@ -520,8 +520,11 @@ async function abrirFormAlterar(id, btn, tipo) {
                     <div class="form-check">
                         <input class="form-check-input me-2" type="checkbox" value="${m.id_conta}" id="membro-${m.id_conta}">
                         <label class="form-check-label" for="membro-${m.id_conta}">
-                            ${m.nome_utilizador}
+                            ${m.nome_utilizador}${(m.lingua_principal || m.lingua_secundaria) ? ' (' + 
+                                [m.lingua_principal, m.lingua_secundaria].filter(Boolean).join(' e ') + 
+                            ')' : ''}
                         </label>
+
                     </div>
                 `;
                 listaMembros.appendChild(li);
@@ -543,7 +546,9 @@ async function abrirFormAlterar(id, btn, tipo) {
                     <div class="form-check">
                         <input class="form-check-input me-2" type="checkbox" value="${d.id_documento}" id="doc-${d.id_documento}" >
                         <label class="form-check-label" for="doc-${d.id_documento}">
-                            #TRX-${idFormatado(d.id_documento)} - ${d.nome_documento}
+                            #TRX-${idFormatado(d.id_documento)} - ${d.nome_documento} ${(d.lingua_origem || d.lingua_destino) ? ' (' +
+                                [d.lingua_origem, d.lingua_destino].filter(Boolean).join(' → ') +
+                                ')' : ''}
                         </label>
                     </div>
                 `;
@@ -835,6 +840,189 @@ document.getElementById('btn-remover-documentos').addEventListener('click', asyn
         btn.disabled = true;
     }
 });
+
+
+
+
+
+
+// =======================
+// ABRIR / FECHAR FORMS
+// =======================
+function abrirFormConfig(tipo) {
+    const forms = ['cargo', 'linguas', 'precos', 'geral'];
+
+    forms.forEach(f => {
+        const wrapper = document.getElementById(`form-config-${f}`);
+        const btn = document.querySelector(`button[onclick="abrirFormConfig('${f}')"]`);
+        if (!wrapper || !btn) return;
+
+        if (f === tipo) {
+            const estaAberto = wrapper.style.display === 'block';
+            wrapper.style.display = estaAberto ? 'none' : 'block';
+            btn.textContent = estaAberto ? 'Editar' : 'Fechar Formulário';
+        } else {
+            wrapper.style.display = 'none';
+            btn.textContent = 'Editar';
+        }
+    });
+}
+
+// =======================
+// PREENCHER TABELAS
+// =======================
+
+async function carregarCargosTabela() {
+    const tbody = document.querySelector('#tabela-cargos tbody');
+    tbody.innerHTML = '';
+
+    const cargos = await apiFetch('/api/admin/cargos');
+    cargos.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.nome_cargo}</td>
+            <td>
+                <button class="btn btn-sm btn-primary me-1" onclick="editarCargo(${c.id_cargo}, '${c.nome_cargo}')">Editar</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarCargo(${c.id_cargo})">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function carregarLinguas() {
+    const tbody = document.querySelector('#tabela-linguas tbody');
+    tbody.innerHTML = '';
+
+    const linguas = await apiFetch('/api/admin/linguas');
+    linguas.forEach(l => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${l.nome_lingua}</td>
+            <td>${l.sigla}</td>
+            <td>
+                <button class="btn btn-sm btn-primary me-1" onclick="editarLingua(${l.id_lingua}, '${l.nome_lingua}', '${l.sigla}')">Editar</button>
+                <button class="btn btn-sm btn-danger" onclick="eliminarLingua(${l.id_lingua})">Eliminar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// =======================
+// EVENTOS DOS FORMS
+// =======================
+
+// Cargos
+const formAdicionarCargo = document.getElementById('form-adicionar-cargos');
+const formAdicionarLingua = document.getElementById('form-adicionar-linguas');
+
+formAdicionarCargo.addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = e.target.nome_cargo.value.trim();
+    if (!nome) return;
+
+    await apiFetch('/api/admin/cargos', { method: 'POST', body: JSON.stringify({ nome_cargo: nome }) });
+    e.target.reset();
+    carregarCargosTabela();
+});
+
+formAdicionarLingua.addEventListener('submit', async e => {
+    e.preventDefault();
+    const nome = e.target.nome_lingua.value.trim();
+    const sigla = e.target.sigla.value.trim();
+    if (!nome || !sigla) return;
+
+    await apiFetch('/api/admin/linguas', { method: 'POST', body: JSON.stringify({ nome_lingua: nome, sigla }) });
+    e.target.reset();
+    carregarLinguas();
+});
+
+// =======================
+// FUNÇÕES EDITAR / ELIMINAR
+// =======================
+
+// Exemplo Cargos
+function editarCargo(id, nome) {
+    const formEditar = document.getElementById('form-alterar-cargos');
+    const formAdicionar = document.getElementById('form-adicionar-cargos');
+
+    // Preencher form de edição
+    formEditar.nome_cargo.value = nome;
+    formEditar.id_cargo.value = id;
+
+    // Mostrar form de edição e esconder form de adicionar
+    formEditar.style.display = 'flex';
+    formAdicionar.style.display = 'none';
+
+    formEditar.onsubmit = async e => {
+        e.preventDefault();
+        const novoNome = formEditar.nome_cargo.value.trim();
+        if (!novoNome) return;
+
+        await apiFetch(`/api/admin/cargos/${id}`, { method: 'PUT', body: JSON.stringify({ nome_cargo: novoNome }) });
+
+        // Resetar e alternar forms
+        formEditar.reset();
+        formEditar.style.display = 'none';
+        formAdicionar.style.display = 'flex';
+        formEditar.onsubmit = null;
+
+        carregarCargosTabela();
+    };
+}
+
+async function eliminarCargo(id) {
+    if (!confirm('Tem certeza que quer eliminar este cargo?')) return;
+    await apiFetch(`/api/admin/cargos/${id}`, { method: 'DELETE' });
+    carregarCargosTabela();
+}
+
+function editarLingua(id, nome, sigla) {
+    const formEditar = document.getElementById('form-alterar-linguas');
+    const formAdicionar = document.getElementById('form-adicionar-linguas');
+
+    formEditar.nome_lingua.value = nome;
+    formEditar.sigla.value = sigla;
+    formEditar.id_lingua.value = id;
+
+    formEditar.style.display = 'flex';
+    formAdicionar.style.display = 'none';
+
+    formEditar.onsubmit = async e => {
+        e.preventDefault();
+        const novoNome = formEditar.nome_lingua.value.trim();
+        const novaSigla = formEditar.sigla.value.trim();
+        if (!novoNome || !novaSigla) return;
+
+        await apiFetch(`/api/admin/linguas/${id}`, { method: 'PUT', body: JSON.stringify({ nome_lingua: novoNome, sigla: novaSigla }) });
+        formEditar.reset();
+        formEditar.style.display = 'none';
+        formAdicionar.style.display = 'flex';
+        formEditar.onsubmit = null;
+        carregarLinguas();
+    };
+}
+
+async function eliminarLingua(id) {
+    if (!confirm('Tem certeza que quer eliminar esta língua?')) return;
+    await apiFetch(`/api/admin/linguas/${id}`, { method: 'DELETE' });
+    carregarLinguas();
+}
+
+// =======================
+// INICIALIZAR
+// =======================
+async function initConfig() {
+    await Promise.all([
+        carregarCargosTabela(),
+        carregarLinguas(),
+        carregarPrecos()
+    ]);
+}
+
+initConfig();
+
 
 
 /* =========================

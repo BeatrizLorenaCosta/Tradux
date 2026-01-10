@@ -198,17 +198,6 @@ router.get('/users', verifyToken, verifyRole(1), async (req, res) => {
     }
 });
 
-// Carregar cargos
-router.get('/cargos', verifyToken, async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT id_cargo, nome_cargo FROM cargo');
-        res.json(rows);
-    }
-    catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
 // Receber dados de um utilizador específico
 router.get('/users/:userId', verifyToken, verifyRole(1), async (req, res) => {
     const { userId } = req.params;
@@ -334,8 +323,7 @@ router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
     const { idEquipa } = req.params;
     try {
         const [rows] = await db.query(`
-            SELECT
-                e.id_equipa,
+            SELECT e.id_equipa,
                 e.nome_equipa,
                 e.tipo,
                 COALESCE(membros.membros_json, JSON_ARRAY()) AS membros,
@@ -343,16 +331,35 @@ router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
             FROM equipas e
             LEFT JOIN (
                 SELECT em.equipa_id,
-                    JSON_ARRAYAGG(JSON_OBJECT('id_conta', c.id_conta, 'nome_utilizador', c.nome_utilizador)) AS membros_json
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_conta', c.id_conta,
+                            'nome_utilizador', c.nome_utilizador,
+                            'lingua_principal', lp.sigla,
+                            'lingua_secundaria', ls.sigla
+                        )
+                    ) AS membros_json
                 FROM equipa_membros em
                 JOIN contas c ON c.id_conta = em.conta_id
+                LEFT JOIN perfis_linguisticos pl ON pl.conta_id = c.id_conta
+                LEFT JOIN linguas lp ON lp.id_lingua = pl.lingua_principal
+                LEFT JOIN linguas ls ON ls.id_lingua = pl.lingua_secundaria
                 GROUP BY em.equipa_id
             ) membros ON membros.equipa_id = e.id_equipa
             LEFT JOIN (
                 SELECT ed.equipa_id,
-                    JSON_ARRAYAGG(JSON_OBJECT('id_documento', d.id_documento, 'nome_documento', d.nome_documento)) AS documentos_json
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_documento', d.id_documento,
+                            'nome_documento', d.nome_documento,
+                            'lingua_origem', lo.sigla,
+                            'lingua_destino', ld.sigla
+                        )
+                    ) AS documentos_json
                 FROM equipa_documentos ed
                 JOIN documentos d ON d.id_documento = ed.documento_id
+                LEFT JOIN linguas lo ON lo.id_lingua = d.lingua_origem
+                LEFT JOIN linguas ld ON ld.id_lingua = d.lingua_destino
                 GROUP BY ed.equipa_id
             ) documentos ON documentos.equipa_id = e.id_equipa
             WHERE e.id_equipa = ?;
@@ -614,10 +621,19 @@ router.put('/documentos/:id/estado', verifyToken, async (req, res) => {
 
 
 
+// Carregar cargos
+router.get('/cargos', verifyToken, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id_cargo, nome_cargo FROM cargo');
+        res.json(rows);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
-
-// Apenas admins podem criar cargos
-router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {
+// Adicionar cargos
+router.post('/cargos', verifyToken, verifyRole(1), async (req, res) => {
     const { nome_cargo } = req.body;
     if (!nome_cargo) return res.status(400).json({ message: 'Nome do cargo obrigatório' });
 
@@ -626,6 +642,111 @@ router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {
         res.json({ id: result.insertId, nome_cargo });
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'Cargo já existe' });
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.put('/cargos/:idCargo', verifyToken, verifyRole(1), async (req, res) => {
+    const { idCargo } = req.params;
+    const { nome_cargo } = req.body;
+    if (!nome_cargo) return res.status(400).json({ message: 'Nome do cargo obrigatório' });
+
+    try {
+        await db.query(
+            `UPDATE cargo SET nome_cargo = ? WHERE id_cargo = ?`,
+            [nome_cargo, idCargo]
+        );
+
+        res.json({
+            message: 'Nome do cargo atualizado.',
+            nome_cargo
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/cargos/:idCargo', verifyToken, verifyRole(1), async (req, res) => {
+    const { idCargo } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM cargo WHERE id_cargo = ?`,
+            [idCargo]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Cargo não encontrado.' });
+        }
+
+        res.json({ message: 'Cargo eliminado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
+// Carregar linguas
+router.get('/linguas', verifyToken, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id_lingua, nome_lingua, sigla FROM linguas');
+        res.json(rows);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post('/linguas', verifyToken, verifyRole(1), async (req, res) => {
+    const { nome_lingua, sigla } = req.body;
+    if (!nome_lingua) return res.status(400).json({ message: 'Nome da lingua obrigatória' });
+    if (!sigla) return res.status(400).json({ message: 'Sigla obrigatória' });
+
+    try {
+        const [result] = await db.query('INSERT INTO linguas (nome_lingua, sigla) VALUES (?, ?)', [nome_lingua, sigla]);
+        res.json({ id: result.insertId, nome_lingua, sigla });
+    } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'Lingua já existe' });
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.put('/linguas/:idLingua', verifyToken, verifyRole(1), async (req, res) => {
+    const { idLingua } = req.params;
+    const { nome_lingua, sigla } = req.body;
+    if (!nome_lingua) return res.status(400).json({ message: 'Nome da lingua obrigatória' });
+    if (!sigla) return res.status(400).json({ message: 'Sigla obrigatória' });
+
+    try {
+        await db.query(
+            `UPDATE linguas SET nome_lingua = ?, sigla = ? WHERE id_lingua = ?`,
+            [nome_lingua, sigla, idLingua]
+        );
+
+        res.json({
+            message: 'Lingua atualizada.',
+            nome_lingua
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/linguas/:idLingua', verifyToken, verifyRole(1), async (req, res) => {
+    const { idLingua } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM linguas WHERE id_lingua = ?`,
+            [idLingua]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Lingua não encontrado.' });
+        }
+
+        res.json({ message: 'Lingua eliminado com sucesso.' });
+    } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
