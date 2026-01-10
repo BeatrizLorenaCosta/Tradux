@@ -189,14 +189,14 @@
 
                                         <form id="form-alterar-valor">
                                             <div class="mb-3">
-                                                <input type="hidden">
+                                                <input type="hidden" name="id_documento">
 
                                                 <label class="form-label">Documento: </label>
-                                                <input type="text" class="form-control" disabled>
+                                                <input type="text" name="nome_documento" class="form-control" disabled>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Valor</label>
-                                                <input type="number" class="form-control" min="0" step="0.01" required>
+                                                <input type="number" name="valor" class="form-control" min="0" step="0.01" required>
                                             </div>
 
                                             <div class="text-end">
@@ -244,14 +244,14 @@
 
                                         <form id="form-alterar-cargo">
                                             <div class="mb-3">
-                                                <input type="hidden">
+                                                <input type="hidden" name="id_conta">
 
                                                 <label class="form-label">Utilizador: </label>
-                                                <input type="text" class="form-control" disabled>
+                                                <input type="text" name="nome_utilizador" class="form-control" disabled>
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Cargo</label>
-                                                <select class="form-select" required>
+                                                <select name="cargo_id" class="form-select" required>
                                                     <option value="" disabled selected>Selecionar</option>
                                                     // carregado automaticamente
                                                 </select>
@@ -323,7 +323,7 @@
                                         <form id="form-criar-equipa">
                                             <div class="mb-3">
                                                 <label class="form-label">Tipo de Equipa</label>
-                                                <select class="form-select" required>
+                                                <select name="tipo" class="form-select" required>
                                                     <option value="" disabled selected>Selecionar</option>
                                                     <option value="tradutores">Tradutores</option>
                                                     <option value="revisores">Revisores</option>
@@ -332,7 +332,7 @@
 
                                             <div class="mb-3">
                                                 <label class="form-label">Nome da Equipa</label>
-                                                <input type="text" class="form-control" required>
+                                                <input name="nome_equipa" type="text" class="form-control" required>
                                             </div>
 
                                             <div class="text-end">
@@ -353,14 +353,14 @@
                                         <form id="form-equipa-utilizador">
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa</label>
-                                                <select class="form-select" required>
+                                                <select name="equipa_id" class="form-select" required>
                                                     <!-- carregar equipas -->
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Utilizador</label>
-                                                <select class="form-select" required>
+                                                <select name="conta_id" class="form-select" required>
                                                     <!-- apenas tradutores ou revisores conforme equipa -->
                                                 </select>
                                             </div>
@@ -383,14 +383,14 @@
                                         <form id="form-doc-equipa-tradutores">
                                             <div class="mb-3">
                                                 <label class="form-label">Documento</label>
-                                                <select class="form-select" required>
+                                                <select name="documento_id" class="form-select" required>
                                                     <!-- documentos em análise -->
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa de Tradutores</label>
-                                                <select class="form-select" required>
+                                                <select name="equipa_id" class="form-select" required>
                                                     <!-- apenas equipas livres de tradutores -->
                                                 </select>
                                             </div>
@@ -411,14 +411,14 @@
                                         <form id="form-doc-equipa-revisores">
                                             <div class="mb-3">
                                                 <label class="form-label">Documento</label>
-                                                <select class="form-select" required>
+                                                <select name="documento_id" class="form-select" required>
                                                     <!-- documentos em análise -->
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa de Revisores</label>
-                                                <select class="form-select" required>
+                                                <select name="equipa_id" class="form-select" required>
                                                     <!-- apenas equipas livres de revisores -->
                                                 </select>
                                             </div>
@@ -428,6 +428,48 @@
                                                     Associar
                                                 </button>
                                             </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div id="form-alterar-equipa-wrapper" class="card border-0 shadow-sm" style="display: none;">
+                                    <div class="card-body">
+                                        <h5 class="mb-3">Alterar Equipa</h5>
+
+                                        <form id="form-alterar-equipa">
+
+                                            <div class="mb-3">
+                                                <input type="hidden" name="id_equipa">
+
+                                                <label class="form-label">Nome da Equipa</label>
+                                                <input name="nome_equipa" type="text" class="form-control" required>
+                                            </div>
+
+                                            <div class="text-end">
+                                                <button class="btn btn-secondary">Alterar</button>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Membros da Equipa</label>
+                                                <ul id="lista-membros" class="list-group mb-2">
+                                                    <!-- Lista de membros atuais com checkboxes -->
+                                                </ul>
+                                                <div class="text-end">
+                                                    <button type="button" class="btn btn-danger" id="btn-remover-membros">Remover Selecionados</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Documentos Associados</label>
+                                                <ul id="lista-documentos" class="list-group mb-2">
+                                                    <!-- Lista de documentos atuais com checkboxes -->
+                                                </ul>
+                                                <div class="text-end">
+                                                    <button type="button" class="btn btn-danger" id="btn-remover-documentos">Remover Selecionados</button>
+                                                </div>
+                                            </div>
+                                            
+                                            
                                         </form>
                                     </div>
                                 </div>

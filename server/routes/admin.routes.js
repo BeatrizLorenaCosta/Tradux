@@ -187,6 +187,7 @@ router.get('/users', verifyToken, verifyRole(1), async (req, res) => {
                 co.nome_utilizador,
                 co.email,
                 co.username,
+                co.cargo_id,
                 ca.nome_cargo AS nome_cargo
             FROM contas co
             JOIN cargo ca ON co.cargo_id = ca.id_cargo
@@ -303,9 +304,10 @@ router.get('/equipas', verifyToken, async (req, res) => {
                     SEPARATOR ', '
                 ) AS siglas_linguas,
 
-                GROUP_CONCAT(DISTINCT ed.documento_id
-                     ORDER BY ed.documento_id
-                     SEPARATOR ', '
+                GROUP_CONCAT(
+                    DISTINCT CONCAT('#TRX-', LPAD(ed.documento_id, 4, '0'))
+                    ORDER BY ed.documento_id
+                    SEPARATOR ', '
                 ) AS documentos,
 
                 COUNT(DISTINCT ed.documento_id) AS total_documentos,
@@ -327,6 +329,84 @@ router.get('/equipas', verifyToken, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
+    const { idEquipa } = req.params;
+    try {
+        const [rows] = await db.query(`
+            SELECT
+                e.id_equipa,
+                e.nome_equipa,
+                e.tipo,
+                COALESCE(membros.membros_json, JSON_ARRAY()) AS membros,
+                COALESCE(documentos.documentos_json, JSON_ARRAY()) AS documentos
+            FROM equipas e
+            LEFT JOIN (
+                SELECT em.equipa_id,
+                    JSON_ARRAYAGG(JSON_OBJECT('id_conta', c.id_conta, 'nome_utilizador', c.nome_utilizador)) AS membros_json
+                FROM equipa_membros em
+                JOIN contas c ON c.id_conta = em.conta_id
+                GROUP BY em.equipa_id
+            ) membros ON membros.equipa_id = e.id_equipa
+            LEFT JOIN (
+                SELECT ed.equipa_id,
+                    JSON_ARRAYAGG(JSON_OBJECT('id_documento', d.id_documento, 'nome_documento', d.nome_documento)) AS documentos_json
+                FROM equipa_documentos ed
+                JOIN documentos d ON d.id_documento = ed.documento_id
+                GROUP BY ed.equipa_id
+            ) documentos ON documentos.equipa_id = e.id_equipa
+            WHERE e.id_equipa = ?;
+        `, [idEquipa]);
+
+        if (!rows.length) return res.status(404).json({ message: 'Equipa não encontrada' });
+
+        // converter JSON arrays
+        const equipa = rows[0];
+        equipa.membros = equipa.membros || '[]';
+        equipa.documentos = equipa.documentos || '[]';
+
+        res.json(equipa);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.put('/equipas/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { nome_equipa } = req.body;
+
+    try {
+        await db.query(`UPDATE equipas SET nome_equipa = ? WHERE id_equipa = ?`, [nome_equipa, id]);
+        res.json({ message: 'Equipa atualizada com sucesso' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/equipas/:id/utilizadores/:conta_id', verifyToken, async (req, res) => {
+    const { id, conta_id } = req.params;
+
+    try {
+        await db.query(`DELETE FROM equipa_membros WHERE equipa_id = ? AND conta_id = ?`, [id, conta_id]);
+        res.json({ message: 'Membro removido' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/documentos/:id/desassociar', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { equipa } = req.body;
+
+    try {
+        await db.query(`DELETE FROM equipa_documentos WHERE documento_id = ? AND equipa_id = ?`, [id, equipa]);
+        res.json({ message: 'Documento removido da equipa' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 
 // Criar equipa
 router.post('/equipas', verifyToken, async (req, res) => {
@@ -506,8 +586,6 @@ router.put('/documentos/:id/estado', verifyToken, async (req, res) => {
     if (estado == 'traduzido') estadoFinal = 'em_revisao';
     if (estado == 'em_analise') estadoFinal = 'a_pagar';
 
-    console.log(estado);
-
     try {
         const [[doc]] = await db.query(
             `SELECT estado FROM documentos WHERE id_documento = ?`,
@@ -551,19 +629,5 @@ router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-
-// Listar documentos pendentes
-router.get('/pendentes', verifyToken, async (req, res) => {
-    try {
-        const [rows] = await db.query('SELECT * FROM documentos WHERE estado = "em_analise"');
-        res.json(rows);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-
-
 
 module.exports = router;
