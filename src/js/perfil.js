@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarFormularioDados();
     updateNavMenu();
     abrirSecaoInicialPerfil();
-    carregarEquipa();
+    carregarEquipa('tradutores');
+    carregarEquipa('revisores');
 });
 
 /* =========================
@@ -136,7 +137,7 @@ const updateNavMenu = () => {
                 criarItem(
                     'fas fa-file-signature',
                     'Documentos da Equipa',
-                    'documentos-equipa'
+                    'documentos-equipa-tradutores'
                 )
             ]
         );
@@ -159,12 +160,12 @@ const updateNavMenu = () => {
                 criarItem(
                     'fas fa-users',
                     'Minha Equipa',
-                    'equipa-revisao'
+                    'equipa-revisores'
                 ),
                 criarItem(
-                    'fas fa-file-check',
+                    'fas fa-file-signature',
                     'Documentos da Equipa',
-                    'documentos-equipa'
+                    'documentos-equipa-revisores'
                 )
             ]
         );
@@ -361,17 +362,16 @@ async function carregarDocumentos() {
     );
 }
 
-async function carregarEquipa() {
+async function carregarEquipa(tipo) {
     try {
         const equipa = await apiFetch('/api/users/me/equipa');
 
-        // === 1. Preencher formulário de membros ===
-        const formMembros = document.getElementById('form-tradutores');
-        formMembros.nome_equipa.value = equipa.nome_equipa;
-        formMembros.tipo_equipa.value = equipa.tipo.charAt(0).toUpperCase() + equipa.tipo.slice(1);
-        formMembros.estado_equipa.value = equipa.ocupada ? 'Ocupada' : 'Livre';
+        const formMembros = document.getElementById(`form-${tipo}`);
+        formMembros.querySelector(`[name="nome_equipa1_${tipo}"]`).value = equipa.nome_equipa;
+        formMembros.querySelector(`[name="tipo_equipa1_${tipo}"]`).value = equipa.tipo.charAt(0).toUpperCase() + equipa.tipo.slice(1);
+        formMembros.querySelector(`[name="estado_equipa1_${tipo}"]`).value = equipa.ocupada ? 'Ocupada' : 'Livre';
 
-        const tbodyMembros = document.querySelector('#equipa-tradutores table tbody');
+        const tbodyMembros = document.querySelector(`#equipa-${tipo} table tbody`);
         renderTabela(tbodyMembros, 
             equipa.membros.map(e => {
                 return `
@@ -387,13 +387,12 @@ async function carregarEquipa() {
             4
         );
 
-        // === 2. Preencher formulário de documentos ===
-        const formDocs = document.getElementById('form-traducao2');
-        document.getElementById('nome_equipa2').value = equipa.nome_equipa;
-        document.getElementById('tipo_equipa2').value = equipa.tipo.charAt(0).toUpperCase() + equipa.tipo.slice(1);
-        document.getElementById('estado_equipa2').value = equipa.ocupada ? 'Ocupada' : 'Livre';
+        const formDocs = document.getElementById(`form2-${tipo}`);
+        formDocs.querySelector(`[name="nome_equipa2_${tipo}"]`).value = equipa.nome_equipa;
+        formDocs.querySelector(`[name="tipo_equipa2_${tipo}"]`).value = equipa.tipo.charAt(0).toUpperCase() + equipa.tipo.slice(1);
+        formDocs.querySelector(`[name="estado_equipa2_${tipo}"]`).value = equipa.ocupada ? 'Ocupada' : 'Livre';
 
-        const tbodyDocs = document.querySelector('#documentos-equipa table tbody');
+        const tbodyDocs = document.querySelector(`#documentos-equipa-${tipo} table tbody`);
 
         renderTabela(tbodyDocs, 
             equipa.documentos.map(d => {
@@ -423,8 +422,6 @@ async function carregarEquipa() {
         console.error('Erro ao carregar equipa:', err);
     }
 }
-
-
 
 
 // Função auxiliar para ação do documento
