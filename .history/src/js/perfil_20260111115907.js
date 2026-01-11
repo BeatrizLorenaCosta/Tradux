@@ -1,0 +1,363 @@
+document.addEventListener('DOMContentLoaded', () => {
+    carregarPerfil();
+    carregarDocumentos();
+    configurarFormularioDados();
+    sairLogin();
+    updateNavMenu();
+    inicializarSidebar();
+    abrirSecaoInicialPerfil();
+});
+
+// ===================== Menu dinâmico (Perfil) =====================
+
+const updateNavMenu = () => {
+    const nav = document.querySelector('#userSidebar .nav-menu');
+    if (!nav) return;
+
+    nav.innerHTML = '';
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        sairLogin();
+        return;
+    }
+
+    const criarItem = (icon, texto, sectionId) => {
+        const div = document.createElement('div');
+        div.className = 'nav-item';
+        div.dataset.sectionId = sectionId;
+        div.innerHTML = `<i class="${icon} me-3"></i>${texto}`;
+        return div;
+    };
+
+    // ================= ADMIN =================
+    if (user.cargo_id === 1) {
+        nav.appendChild(criarItem(
+            'fas fa-user-edit',
+            'Alterar Dados',
+            'alterar-dados'
+        ));
+    }
+
+    // ================= CLIENTE =================
+    else if (user.cargo_id === 2) {
+        nav.appendChild(criarItem(
+            'fas fa-file-alt',
+            'Meus Documentos',
+            'meus-documentos'
+        ));
+        nav.appendChild(criarItem(
+            'fas fa-user-edit',
+            'Alterar Dados',
+            'alterar-dados'
+        ));
+    }
+
+    // ================= TRADUTOR =================
+    else if (user.cargo_id === 3) {
+        nav.appendChild(criarItem(
+            'fas fa-user-edit',
+            'Alterar Dados',
+            'alterar-dados'
+        ));
+        nav.appendChild(criarItem(
+            'fas fa-users',
+            'Minha Equipa de Tradução',
+            'equipa-traducao'
+        ));
+        nav.appendChild(criarItem(
+            'fas fa-file-signature',
+            'Documentos da Equipa',
+            'documentos-equipa'
+        ));
+    }
+
+    // ================= REVISOR =================
+    else if (user.cargo_id === 4) {
+        nav.appendChild(criarItem(
+            'fas fa-user-edit',
+            'Alterar Dados',
+            'alterar-dados'
+        ));
+        nav.appendChild(criarItem(
+            'fas fa-users',
+            'Minha Equipa de Revisão',
+            'equipa-revisao'
+        ));
+        nav.appendChild(criarItem(
+            'fas fa-file-check',
+            'Documentos da Equipa',
+            'documentos-equipa'
+        ));
+    }
+
+    // ================= LOGOUT =================
+    const logout = document.createElement('div');
+    logout.className = 'nav-item';
+    logout.id = 'logoutUserBtn';
+    logout.innerHTML = `<i class="fas fa-sign-out-alt me-3"></i>Sair`;
+    logout.addEventListener('click', sairLogin);
+
+    nav.appendChild(logout);
+
+    // reativar listeners
+    inicializarSidebar();
+};
+
+function abrirSecaoInicialPerfil() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return;
+
+    if (user.cargo_id === 2) {
+        abrirSecaoPerfil('meus-documentos');
+    } else {
+        abrirSecaoPerfil('alterar-dados');
+    }
+}
+
+
+function abrirSecaoPerfil(sectionId) {
+    document.querySelectorAll('.user-page')
+        .forEach(p => p.style.display = 'none');
+
+    const secao = document.getElementById(sectionId);
+    if (secao) secao.style.display = 'block';
+
+    const itemMenu = document.querySelector(
+        `#userSidebar .nav-item[data-section-id="${sectionId}"]`
+    );
+    if (itemMenu) {
+        document.getElementById('userPageTitle').textContent =
+            itemMenu.textContent.trim();
+
+        document.querySelectorAll('#userSidebar .nav-item')
+            .forEach(i => i.classList.remove('active'));
+        itemMenu.classList.add('active');
+    }
+}
+
+
+/* =========================
+   CONFIGURAÇÕES GERAIS
+========================= */
+
+function getAuthHeaders() {
+    const token = localStorage.getItem('token');
+    if (!token) sairLogin();
+
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+/* =========================
+   SIDEBAR / NAVEGAÇÃO
+========================= */
+
+function inicializarSidebar() {
+    document.querySelectorAll('#userSidebar .nav-item[data-section-id]')
+        .forEach(item => {
+            item.addEventListener('click', () => {
+                const sectionId = item.dataset.sectionId;
+
+                document.getElementById('userPageTitle').textContent = item.textContent.trim();
+
+                document.querySelectorAll('#userSidebar .nav-item')
+                    .forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+
+                document.querySelectorAll('.user-page')
+                    .forEach(p => p.style.display = 'none');
+
+                document.getElementById(sectionId).style.display = 'block';
+            });
+        });
+
+    document.getElementById('userMenuToggle')?.addEventListener('click', () => {
+        document.getElementById('userSidebar').classList.toggle('active');
+    });
+}
+
+/* =========================
+   PERFIL DO UTILIZADOR
+========================= */
+
+async function carregarPerfil() {
+    try {
+        const res = await fetch('/api/users/me', { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('Sessão inválida');
+
+        const user = await res.json();
+
+        document.getElementById('userNameDisplay').textContent = `Olá, ${user.nome_utilizador}`;
+        document.querySelector('.user-avatar').textContent = user.nome_utilizador.substring(0, 2).toUpperCase();
+
+        document.getElementById('perfil-nome').value = user.nome_utilizador;
+        document.getElementById('perfil-email').value = user.email;
+
+    } catch (err) {
+        sairLogin();
+    }
+}
+
+/* =========================
+   DOCUMENTOS DO UTILIZADOR
+========================= */
+
+async function carregarDocumentos() {
+    try {
+        const res = await fetch('/api/users/me/documentos', { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('Erro ao carregar documentos');
+
+        const documentos = await res.json();
+        const tbody = document.querySelector('#meus-documentos tbody');
+        tbody.innerHTML = '';
+
+        if (!documentos.length) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted">Nenhum documento encontrado.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        documentos.forEach(doc => {
+            const { label: estadoLabel, cor: corEstado } = getEstadoInfo(doc.estado);
+            const acaoHTML = getAcaoHTML(doc);
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>#TRX-${doc.id_documento}</td>
+                    <td>${doc.nome_documento}</td>
+                    <td>${doc.documento_link}</td>
+                    <td>${doc.lingua_origem} → ${doc.lingua_destino}</td>
+                    <td>${doc.paginas}</td>
+                    <td>${doc.valor}€</td>
+                    <td><span class="badge bg-${corEstado}">${estadoLabel}</span></td>
+                    <td>${new Date(doc.data_envio).toLocaleDateString('pt-PT')}</td>
+                    <td>${acaoHTML}</td>
+                </tr>
+            `;
+        });
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+// Função auxiliar para estado
+function getEstadoInfo(estado) {
+    const estados = {
+        em_analise: { label: 'Em Análise', cor: 'secondary' },
+        em_traducao: { label: 'Em Tradução', cor: 'warning' },
+        em_revisao: { label: 'Em Revisão', cor: 'info' },
+        finalizado: { label: 'Finalizado', cor: 'success' },
+        traduzido: { label: 'Traduzido', cor: 'primary' },
+        a_pagar: { label: 'A Pagar', cor: 'danger' },
+        cancelado: { label: 'Cancelado', cor: 'dark' },
+        pago: { label: 'Pago', cor: 'dark'}
+    };
+    return estados[estado] || { label: 'Desconhecido', cor: 'secondary' };
+}
+
+// Função auxiliar para ação do documento
+function getAcaoHTML(doc) {
+    if (doc.estado === 'a_pagar') {
+        const nomeNovo = doc.nome_documento.replace(/'/g, "\\'");
+        return `    
+            <button class="btn btn-sm btn-danger"
+                onclick='irParaPagamento(
+                    ${doc.id_documento}, 
+                    "${nomeNovo}", 
+                    "${doc.documento_link}", 
+                    "${doc.lingua_origem}", 
+                    "${doc.lingua_destino}", 
+                    ${doc.valor}, 
+                    ${doc.paginas}
+                )'>
+                Pagar
+            </button>
+        `;
+    }
+
+    if (doc.estado === 'finalizado' && doc.documento_link_final) {
+        return `
+            <a href="${doc.documento_link_final}" class="btn btn-sm btn-success">
+                Descarregar documento
+            </a>
+        `;
+    }
+
+    if (doc.estado === 'cancelado') {
+        return `
+            <span class="text-muted">Admin pode eliminar esse documento</span>
+        `;
+    }
+
+    return `<span class="text-muted">Sem ações disponíveis</span>`;
+}
+
+
+function irParaPagamento(id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas) {
+    const pagamentoData = { id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas };
+    localStorage.setItem('pagamento', JSON.stringify(pagamentoData));
+    window.location.href = 'pagamento.html';
+}
+
+
+/* =========================
+   ALTERAR DADOS
+========================= */
+
+function configurarFormularioDados() {
+    const form = document.getElementById('form-dados');
+    if (!form) return;
+
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const nome = document.getElementById('perfil-nome').value.trim();
+        const email = document.getElementById('perfil-email').value.trim();
+        const password = document.getElementById('perfil-password').value.trim();
+
+        if (!nome || !email) {
+            alert('Nome e email são obrigatórios.');
+            return;
+        }
+
+        const body = { nome_utilizador: nome, email };
+        if (password) body.password = password;
+
+        try {
+            const res = await fetch(`/api/users/me`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) throw new Error();
+            alert('Dados atualizados com sucesso.');
+            document.getElementById('perfil-password').value = '';
+            carregarPerfil();
+
+        } catch {
+            alert('Erro ao atualizar os dados.');
+        }
+    });
+}
+
+/* =========================
+   LOGOUT
+========================= */
+
+function sairLogin() {
+    document.getElementById('logoutUserBtn')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        document.getElementById('userNameDisplay').textContent = '';
+        document.querySelector('.user-avatar').textContent = '';
+        window.location.href = 'login-signup.html';
+    });
+}
