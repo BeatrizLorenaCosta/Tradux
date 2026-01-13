@@ -37,7 +37,7 @@ function preencherOrigem() {
 
   linguas.forEach(l => {
     const opt = document.createElement('option');
-    opt.value = l.id_linguas;
+    opt.value = l.id_lingua; // ✅ envia o ID, não o nome
     opt.textContent = l.nome_lingua;
     origemSelect.appendChild(opt);
   });
@@ -58,9 +58,9 @@ function atualizarDestino() {
   destinoSelect.disabled = false;
 
   linguas.forEach(l => {
-    if (l.nome_lingua !== origemSelecionada) {
+    if (l.id_lingua !== parseInt(origemSelect.value, 10)) { // compara IDs
       const opt = document.createElement('option');
-      opt.value = l.id_linguas;
+      opt.value = l.id_lingua;
       opt.textContent = l.nome_lingua;
       destinoSelect.appendChild(opt);
     }
@@ -101,34 +101,56 @@ async function uploadPDF() {
   }
 
   const file = inputFile.files[0];
-
   if (!file) {
     alert('Seleciona um ficheiro PDF.');
     return;
   }
 
+  status.innerText = 'A processar ficheiro...';
+
+  // Ler número de páginas
+  let numPaginas = 0;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.8.162/build/pdf.worker.min.js';
+    const pdfDoc = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    numPaginas = pdfDoc.numPages;
+    console.log('Número de páginas:', numPaginas);
+  } catch (err) {
+    console.error('Erro ao ler PDF:', err);
+    alert('Não foi possível ler o PDF.');
+    return;
+  }
+
   status.innerText = 'A enviar ficheiro...';
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('Não estás logado!');
+    return;
+  }
 
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('origem', origemSelect.value);
-  formData.append('destino', destinoSelect.value);
+  formData.append('origem', parseInt(origemSelect.value, 10)); // ✅ envia ID
+  formData.append('destino', parseInt(destinoSelect.value, 10)); // ✅ envia ID
+  formData.append('paginas', numPaginas);
 
   try {
-    const res = await fetch(
-      'http://localhost:5000/api/traducao/upload',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: localStorage.getItem('token') || ''
-        },
-        body: formData
+    console.log('Token:', token);
+
+    const res = await fetch('http://localhost:5000/api/traducao/upload', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`
       }
-    );
+    });
+
+    console.log('Status do fetch:', res.status);
 
     const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error);
+    if (!res.ok) throw new Error(data.error || 'Erro desconhecido');
 
     console.log('Upload OK:', data);
     status.innerText = 'Ficheiro enviado com sucesso ✅';
