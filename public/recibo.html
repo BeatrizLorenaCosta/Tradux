@@ -11,6 +11,10 @@
     <!-- Bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- jsPDF e AutoTable -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
@@ -46,17 +50,17 @@
                         Website: www.tradux.pt
                     </div>
                     <div class="col-md-6 text-md-end">
-                        <strong>Recibo Nº:</strong> REC-2025-0048<br>
-                        <strong>Data de Emissão:</strong> 06 de Janeiro de 2026<br>
-                        <strong>Data de Pagamento:</strong> 06 de Janeiro de 2026
+                        <strong>Recibo Nº:</strong> <span id="recibo-numero">REC-2025-0048</span><br>
+                        <strong>Data de Emissão:</strong> <span id="data-emissao">06 de Janeiro de 2026</span><br>
+                        <strong>Data de Pagamento:</strong> <span id="data-pagamento">06 de Janeiro de 2026</span>
                     </div>
                 </div>
 
                 <!-- Dados do Cliente -->
                 <div class="mb-4">
                     <h5 class="fw-bold mb-3">Emitido para:</h5>
-                    <p class="mb-1"><strong>Nome:</strong> Maria João Silva</p>
-                    <p class="mb-1"><strong>Email:</strong> maria.silva@email.com</p>
+                    <p class="mb-1"><strong>Nome:</strong> <span id="nome-cliente">Maria João Silva</span></p>
+                    <p class="mb-1"><strong>Email:</strong> <span id="email-cliente">maria.silva@email.com</span></p>
                 </div>
 
                 <!-- Detalhes do Serviço -->
@@ -66,7 +70,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th>Descrição</th>
-                                <th>ID</th>
+                                <th>ID Documento</th>
                                 <th>Línguas</th>
                                 <th>Quantidade</th>
                                 <th>Total</th>
@@ -74,30 +78,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Tradução Certificada - Contrato Comercial</td>
-                                <td>#TRX-2048</td>
-                                <td>Português → Inglês</td>
-                                <td>12 páginas</td>
-                                <td>€ 222,00</td>
-                            </tr>
-                            <tr>
-                                <td>Revisão Final e Formatação</td>
-                                <td>#TRX-2048</td>
-                                <td>—</td>
-                                <td>1 serviço</td>
-                                <td>€ 45,00</td>
-                            </tr>
-                            <tr class="table-primary">
-                                <td colspan="4" class="text-end fw-bold">Total a Pagar:</td>
-                                <td class="fw-bold">€ 267,00</td>
-                            </tr>
-                            <tr>
-                                <td colspan="4" class="text-end">IVA (23%):</td>
-                                <td>€ 50,37</td>
+                                <td id="descricao-servico">Tradução Certificada</td>
+                                <td id="id-documento">#TRX-2048</td>
+                                <td id="linguas">Português → Inglês</td>
+                                <td id="quantidade">12 páginas</td>
+                                <td id="valor-total">€ 222,00</td>
                             </tr>
                             <tr class="table-success">
                                 <td colspan="4" class="text-end fw-bold fs-5">Total Pago:</td>
-                                <td class="fw-bold fs-5">€ 267,00</td>
+                                <td class="fw-bold fs-5" id="total-final">€ 222,00</td>
                             </tr>
                         </tbody>
                     </table>
@@ -109,12 +98,12 @@
                         <i class="bi bi-check-circle-fill me-2"></i>
                         Pagamento Efetuado com Sucesso
                     </h4>
-                    <p class="text-muted mb-0">Método: Cartão de Crédito (**** 4242)</p>
+                    <p class="text-muted mb-0">Método: <span id="metodo-pagamento">Cartão de Crédito (**** 4242)</span></p>
                 </div>
 
                 <!-- Botões de Ação -->
                 <div class="text-center mt-5">
-                    <button class="btn btn-outline-primary btn-lg px-5">
+                    <button class="btn btn-outline-primary btn-lg px-5" onclick="gerarPDF()">
                         <i class="bi bi-download me-2"></i> Descarregar em PDF
                     </button>
                 </div>
@@ -127,6 +116,8 @@
     </footer>
 
     <script src="../src/js/main.js" defer></script>
+    <script src="../src/js/recibo.js" defer></script>
+    
 
 </body>
 </html>

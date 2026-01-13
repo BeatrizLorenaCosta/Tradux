@@ -198,7 +198,86 @@ router.get('/me/equipa', verifyToken, async (req, res) => {
     }
 });
 
+// Atualizar estado do documento para "pago"
+router.patch('/documento/:id/marcar-pago', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
 
+    console.log('Marcando documento como pago - ID:', id, 'UserID:', userId);
 
+    try {
+        // Verificar se o documento pertence ao utilizador
+        const [documento] = await db.query(
+            'SELECT conta_id, estado FROM documentos WHERE id_documento = ?',
+            [id]
+        );
+
+        console.log('Documento encontrado:', documento);
+
+        if (!documento || documento.length === 0) {
+            console.log('Documento não encontrado');
+            return res.status(404).json({ error: 'Documento não encontrado' });
+        }
+
+        if (documento[0].conta_id !== userId) {
+            console.log('Sem permissão - conta_id:', documento[0].conta_id, 'userId:', userId);
+            return res.status(403).json({ error: 'Sem permissão para atualizar este documento' });
+        }
+
+        console.log('Estado atual:', documento[0].estado);
+
+        // Atualizar o estado para "pago"
+        const [result] = await db.query(
+            'UPDATE documentos SET estado = ? WHERE id_documento = ?',
+            ['pago', id]
+        );
+
+        console.log('Update result:', result);
+
+        res.json({ message: 'Documento marcado como pago com sucesso', affectedRows: result.affectedRows });
+    } catch (err) {
+        console.error('Erro completo:', err);
+        res.status(500).json({ error: 'Erro ao atualizar documento', details: err.message });
+    }
+});
+
+// Deletar documento
+router.delete('/documento/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+
+    console.log('Eliminando documento - ID:', id, 'UserID:', userId);
+
+    try {
+        // Verificar se o documento pertence ao utilizador
+        const [documento] = await db.query(
+            'SELECT conta_id FROM documentos WHERE id_documento = ?',
+            [id]
+        );
+
+        if (!documento || documento.length === 0) {
+            return res.status(404).json({ error: 'Documento não encontrado' });
+        }
+
+        if (documento[0].conta_id !== userId) {
+            return res.status(403).json({ error: 'Sem permissão para eliminar este documento' });
+        }
+
+        // Deletar o documento
+        const [result] = await db.query(
+            'DELETE FROM documentos WHERE id_documento = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Erro ao eliminar documento' });
+        }
+
+        res.json({ message: 'Documento eliminado com sucesso' });
+    } catch (err) {
+        console.error('Erro ao eliminar:', err);
+        res.status(500).json({ error: 'Erro ao eliminar documento', details: err.message });
+    }
+});
 
 module.exports = router;

@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function getAuthHeaders() {
     const token = localStorage.getItem('token');
+    console.log('Token:', token);
     if (!token) sairLogin();
     return {
         'Content-Type': 'application/json',
@@ -337,8 +338,8 @@ async function carregarPerfil() {
 async function carregarDocumentos() {
     const documentos = await apiFetch('/api/users/me/documentos');
     const tbody = document.querySelector('#meus-documentos tbody');
-    
-    renderTabela(tbody, 
+
+    renderTabela(tbody,
         documentos.map(doc => {
             const [l, c] = mapEstado(doc.estado);
             const acaoHTML = getAcaoHTML(doc);
@@ -372,7 +373,7 @@ async function carregarEquipa(tipo) {
         formMembros.querySelector(`[name="estado_equipa1_${tipo}"]`).value = equipa.ocupada ? 'Ocupada' : 'Livre';
 
         const tbodyMembros = document.querySelector(`#equipa-${tipo} table tbody`);
-        renderTabela(tbodyMembros, 
+        renderTabela(tbodyMembros,
             equipa.membros.map(e => {
                 return `
                     <tr>
@@ -394,7 +395,7 @@ async function carregarEquipa(tipo) {
 
         const tbodyDocs = document.querySelector(`#documentos-equipa-${tipo} table tbody`);
 
-        renderTabela(tbodyDocs, 
+        renderTabela(tbodyDocs,
             equipa.documentos.map(d => {
                 const [l, c] = mapEstado(d.estado);
 
@@ -428,18 +429,24 @@ async function carregarEquipa(tipo) {
 function getAcaoHTML(doc) {
     if (doc.estado === 'a_pagar') {
         const nomeNovo = doc.nome_documento.replace(/'/g, "\\'");
+        const linguaOrigem = typeof doc.lingua_origem === 'string' ? doc.lingua_origem : doc.lingua_origem?.nome_lingua || 'Desconhecida';
+        const linguaDestino = typeof doc.lingua_destino === 'string' ? doc.lingua_destino : doc.lingua_destino?.nome_lingua || 'Desconhecida';
         return `    
             <button class="btn btn-sm btn-danger"
                 onclick='irParaPagamento(
                     ${doc.id_documento}, 
                     "${nomeNovo}", 
                     "${doc.documento_link}", 
-                    "${doc.lingua_origem}", 
-                    "${doc.lingua_destino}", 
+                    "${linguaOrigem}", 
+                    "${linguaDestino}", 
                     ${doc.valor}, 
                     ${doc.paginas}
                 )'>
                 Pagar
+            </button>
+            <button class="btn btn-sm btn-secondary"
+                onclick='cancelarFichaDocumento(${doc.id_documento})'>
+                Cancelar
             </button>
         `;
     }
@@ -454,13 +461,54 @@ function getAcaoHTML(doc) {
 
     if (doc.estado === 'cancelado') {
         return `
-            <span class="text-muted">Admin pode eliminar esse documento</span>
+            <button class="btn btn-sm btn-secondary"
+            onclick='cancelarFichaDocumento(${doc.id_documento})'>
+            Cancelar Documento
+            </button>
+        `;
+    }
+
+    if (doc.estado === 'pago' || doc.estado === 'em_traducao' || doc.estado === 'em_revisao' || doc.estado === 'traduzido') {
+        return `
+            <button class="btn btn-sm btn-secondary" onclick='gerarReciboPDF(${doc.id_documento})'>
+                Descarregar Recibo
+            </button>
         `;
     }
 
     return `<span class="text-muted">Sem ações disponíveis</span>`;
 }
 
+function cancelarFichaDocumento(id_documento) {
+    if (!confirm('Tem a certeza que deseja eliminar este documento? Esta ação é irreversível.')) {
+        return;
+    }
+
+    const token = localStorage.getItem('token');
+    fetch(`http://localhost:5000/api/users/documento/${id_documento}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+        .then(async res => {
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('Erro delete:', text, 'Status:', res.status);
+                throw new Error(`Erro ${res.status}: ${text}`);
+            }
+            return res.json();
+        })
+        .then(() => {
+            alert('Documento eliminado com sucesso!');
+            carregarDocumentos();
+        })
+        .catch(err => {
+            console.error('Erro ao eliminar:', err);
+            alert('Erro ao eliminar o documento: ' + err.message);
+        });
+}
 
 function irParaPagamento(id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas) {
     const pagamentoData = { id_documento, nome, link, lingua_origem, lingua_destino, valor, paginas };
@@ -468,6 +516,100 @@ function irParaPagamento(id_documento, nome, link, lingua_origem, lingua_destino
     window.location.href = 'pagamento.html';
 }
 
+function gerarReciboPDF(id_documento) {
+    const token = localStorage.getItem('token');
+
+    fetch(`http://localhost:5000/api/recibos/documento/${id_documento}`, {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+        .then(async res => {
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('Erro ao buscar recibo:', text, 'Status:', res.status);
+                throw new Error(`Status ${res.status}: ${text}`);
+            }
+            return res.json();
+        })
+        .then(recibo => {
+            console.log('Recibo obtido:', recibo);
+
+            // Gerar PDF no cliente com jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Cores
+            const corPrimaria = [0, 102, 204];
+            const corFundo = [240, 248, 255];
+
+            // Dados da empresa
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Tradux - Serviços de Tradução', 14, 20);
+            doc.text('Website: www.tradux.pt', 14, 26);
+
+            // Linha separadora
+            doc.setDrawColor(...corPrimaria);
+            doc.line(14, 32, 196, 32);
+
+            // Número e data do recibo
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text(`Recibo Nº: REC-${recibo.id_recibo}`, 14, 42);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text(`Data de Emissão: ${new Date(recibo.data_emissao).toLocaleDateString('pt-PT')}`, 14, 48);
+
+            // Dados do cliente
+            doc.setFontSize(11);
+            doc.setFont(undefined, 'bold');
+            doc.text('Emitido para:', 14, 60);
+            doc.setFont(undefined, 'normal');
+            doc.setFontSize(10);
+            doc.text(`Nome: ${recibo.nome_cliente}`, 14, 66);
+            doc.text(`Email: ${recibo.email_cliente}`, 14, 72);
+
+            // Tabela de detalhes
+            doc.autoTable({
+                head: [['Descrição', 'Línguas', 'Quantidade', 'Valor']],
+                body: [
+                    [recibo.descricao, recibo.linguas, `${recibo.quantidade} páginas`, `€ ${parseFloat(recibo.valor_total).toFixed(2)}`]
+                ],
+                startY: 92,
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 6
+                },
+                headStyles: {
+                    fillColor: corPrimaria,
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                bodyStyles: {
+                    fillColor: corFundo
+                }
+            });
+
+            // Total
+            const finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFont(undefined, 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(...corPrimaria);
+            doc.text(`Total: € ${parseFloat(recibo.valor_total).toFixed(2)}`, 14, finalY);
+
+            // Rodapé
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text('© 2025 Tradux. Todos os direitos reservados.', 14, 280);
+
+            // Salvar
+            doc.save(`recibo_documento_${id_documento}.pdf`);
+        })
+        .catch(err => {
+            console.error('Erro ao descarregar recibo:', err);
+            alert('Erro ao descarregar recibo: ' + err.message);
+        });
+}
 
 /* =========================
    ALTERAR DADOS
@@ -514,8 +656,8 @@ function configurarFormularioDados() {
 
 function sairLogin() {
     localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        document.getElementById('userNameDisplay').textContent = '';
-        document.querySelector('.user-avatar').textContent = '';
-        window.location.href = 'login-signup.html';
+    localStorage.removeItem('user');
+    document.getElementById('userNameDisplay').textContent = '';
+    document.querySelector('.user-avatar').textContent = '';
+    window.location.href = 'login-signup.html';
 }

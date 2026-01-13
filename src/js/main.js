@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Toggle menu mobile
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
     const menuToggle = document.getElementById('menu-toggle');
     const navUl = document.querySelector('nav ul');
     if (menuToggle && navUl) {
@@ -105,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 nav.appendChild(criarLink('perfil.html', 'Perfil'));
             }
 
-            if (user.cargo_id ==2) {
+            if (user.cargo_id == 2) {
                 nav.appendChild(criarLink('traducao.html', 'Tradução'));
                 nav.appendChild(criarLink('perfil.html', 'Perfil'));
             }
