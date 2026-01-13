@@ -6,6 +6,7 @@ const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const adminRoutes = require('./routes/admin.routes');
 const traducaoRoutes = require('./routes/traducao.routes');
+const reciboRoutes = require('./routes/recibo.routes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/traducao', traducaoRoutes);
+app.use('/api/recibos', reciboRoutes);
 
 app.get('/', (req, res) => res.send('Servidor Tradux ativo!'));
 

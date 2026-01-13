@@ -94,9 +94,10 @@ CREATE TABLE recibos (
     data_emissao DATETIME NOT NULL,
     data_pagamento DATETIME NOT NULL,
     nome_cliente VARCHAR(100) NOT NULL,
+    descricao VARCHAR(150) DEFAULT 'Serviço de tradução',
     email_cliente VARCHAR(150) NOT NULL,
     linguas VARCHAR(50),
-    quantidade VARCHAR(50),  -- Ex: 12 páginas ou 1 serviço
+    quantidade INT NOT NULL,  -- Ex: 12 páginas ou 1 serviço
     valor_total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
     FOREIGN KEY (documento_id) REFERENCES documentos(id_documento)
