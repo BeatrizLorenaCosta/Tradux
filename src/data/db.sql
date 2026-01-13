@@ -36,7 +36,8 @@ create table documentos (
     id_documento INT AUTO_INCREMENT PRIMARY KEY,
     nome_documento VARCHAR(100),
     documento_link VARCHAR(255) NOT NULL,
-    documento_link_final VARCHAR(255),
+    documento_link_final VARCHAR(255) DEFAULT NULL,
+    documento_link_traduzido VARCHAR(255) DEFAULT NULL,
 
     lingua_origem INT NOT NULL,
     lingua_destino INT NOT NULL,
@@ -53,7 +54,9 @@ create table documentos (
         'finalizado',
         'a_pagar',
         'cancelado',
-        'pago'
+        'pago',
+        'aguardando_assinaturas',
+        'aguardando_link' -- Link de ficheiro traduzido
         ) DEFAULT 'em_analise',
 
     erros_encontrados TEXT,
@@ -74,6 +77,7 @@ CREATE TABLE equipa_membros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     equipa_id INT NOT NULL,
     conta_id INT NOT NULL,
+    assinou_documento TINYINT DEFAULT 0,
     FOREIGN KEY (equipa_id) REFERENCES equipas(id_equipa) ON DELETE CASCADE,
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta) ON DELETE CASCADE
 );
@@ -82,6 +86,8 @@ CREATE TABLE equipa_documentos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     equipa_id INT NOT NULL,
     documento_id INT NOT NULL,
+    responsavel_upload_id INT DEFAULT NULL,
+    FOREIGN KEY (responsavel_upload_id) REFERENCES contas(id_conta),
     FOREIGN KEY (equipa_id) REFERENCES equipas(id_equipa) ON DELETE CASCADE,
     FOREIGN KEY (documento_id) REFERENCES documentos(id_documento) ON DELETE CASCADE,
     UNIQUE (equipa_id, documento_id)
@@ -100,7 +106,8 @@ CREATE TABLE recibos (
     quantidade INT NOT NULL,  -- Ex: 12 páginas ou 1 serviço
     valor_total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
-    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento)
+    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento),
+    UNIQUE (documento_id)
 );
 
 create table perfis_linguisticos (
