@@ -36,10 +36,12 @@
                     <img src="https://cdn.prod.website-files.com/64199d190fc7afa82666d89c/6491becf6cd713fef62a9a2c_MBWay.png" alt="MB Way" style="height: 80px;">
                 </div>
 
-                <form class="mb-5">
+                <form class="mb-5" id="form-mbway" novalidate>
                     <div class="mb-4">
                         <label class="form-label">Telemóvel associado ao MB Way</label>
-                        <input type="tel" class="form-control form-control-lg text-center" placeholder="9XX XXX XXX" maxlength="12">
+                        <input type="tel" id="telefoneMB" class="form-control form-control-lg text-center"
+                            placeholder="9XX XXX XXX" maxlength="12" required>
+                        <div class="invalid-feedback">Telemóvel inválido. Ex: 912 345 678</div>
                     </div>
 
                     <div class="bg-light p-4 rounded text-center mb-4">
@@ -47,11 +49,13 @@
                         <h4 id="valor-pagar-mbway" class="text-primary fw-bold mb-0">Total: € 0,00</h4>
                     </div>
 
-                    <button type="button" class="btn btn-success btn-lg w-100" style="background-color: #af0707; height: 60px; font-weight: bold;"
-                            onclick="fazerPagamento('mbway')">
+                    <button type="button" class="btn btn-success btn-lg w-100"
+                            style="background-color: #af0707; height: 60px; font-weight: bold;"
+                            onclick="validarMBWay()">
                         Gerar Pedido MB Way
                     </button>
                 </form>
+
 
                 <div class="text-center text-muted small">
                     <p>Abre a app MB Way e confirma o pagamento<br>
