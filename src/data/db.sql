@@ -56,10 +56,10 @@ create table documentos (
         'cancelado',
         'pago',
         'aguardando_assinaturas',
-        'aguardando_link' -- Link de ficheiro traduzido
+        'aguardando_link'
         ) DEFAULT 'em_analise',
 
-    erros_encontrados TEXT,
+    erros_encontrados TEXT DEFAULT NULL,
     conta_id INT NOT NULL,
     
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta),
@@ -77,9 +77,18 @@ CREATE TABLE equipa_membros (
     id INT AUTO_INCREMENT PRIMARY KEY,
     equipa_id INT NOT NULL,
     conta_id INT NOT NULL,
-    assinou_documento TINYINT DEFAULT 0,
     FOREIGN KEY (equipa_id) REFERENCES equipas(id_equipa) ON DELETE CASCADE,
     FOREIGN KEY (conta_id) REFERENCES contas(id_conta) ON DELETE CASCADE
+);
+
+CREATE TABLE equipa_assinaturas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    conta_id INT NOT NULL,
+    documento_id INT NOT NULL,
+    assinou_documento TINYINT DEFAULT 0,
+    FOREIGN KEY (conta_id) REFERENCES contas(id_conta) ON DELETE CASCADE,
+    FOREIGN KEY (documento_id) REFERENCES documentos(id_documento) ON DELETE CASCADE,
+    UNIQUE(conta_id, documento_id)
 );
 
 CREATE TABLE equipa_documentos (
@@ -150,7 +159,7 @@ INSERT INTO contas (nome_utilizador, email, username, senha_hash, cargo_id) VALU
 ('Ana Tradutora', 'ana@tradux.pt', 'anatrad', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 3), -- password: 123123
 ('Carlos Revisor', 'carlos@tradux.pt', 'carlosrev', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 4), -- password: 123123
 ('Beatriz Cliente', 'beatriz@cliente.pt', 'bea', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 2), -- password: 123123
-('Pedro Cliente', 'pedro@cliente.pt', 'pedrocli', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 2),
+('Pedro Cliente', 'pedro@cliente.pt', 'pedrocli', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 3),
 ('Sofia Tradutora', 'sofia@tradux.pt', 'sofiatrad', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 3),
 ('Luís Tradutor', 'luis@tradux.pt', 'luistrad', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 3),
 ('Inês Revisora', 'ines@tradux.pt', 'inesrev', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 4);
@@ -162,21 +171,35 @@ INSERT INTO perfis_linguisticos (conta_id, lingua_principal, lingua_secundaria) 
 (8, 2, 3),  -- Luís: EN → ES
 (9, 3, 1);  -- Inês: ES → PT
 
+INSERT INTO documentos (
+    nome_documento, 
+    documento_link, 
+    documento_link_final, 
+    documento_link_traduzido,
+    lingua_origem, 
+    lingua_destino, 
+    valor, 
+    paginas, 
+    estado, 
+    erros_encontrados, 
+    conta_id,
+    data_envio
+) VALUES
+('Documento 1', '/uploads/doc1_original.pdf', NULL, NULL, 1, 2, 25.00, 5, 'a_pagar', NULL, 6, CURRENT_TIMESTAMP),
+('Documento 2', '/uploads/doc2_original.docx', '/uploads/doc2_final.docx', '/uploads/doc2_traduzido.docx', 2, 1, 40.00, 8, 'finalizado', 'Pequenos erros gramaticais corrigidos', 6, CURRENT_TIMESTAMP),
+('Documento 3', '/uploads/doc3_original.pdf', NULL, NULL, 1, 3, 15.00, 6, 'aguardando_link', NULL, 6, CURRENT_TIMESTAMP),
+('Documento 4', '/uploads/doc4_original.pdf', NULL, NULL, 1, 3, 35.00, 7, 'aguardando_assinaturas', NULL, 6, CURRENT_TIMESTAMP),
+('Documento 5', '/uploads/doc5_original.pdf', NULL, NULL, 1, 3, 20.00, 4, 'em_traducao', NULL, 6, CURRENT_TIMESTAMP),
+('Documento 6', '/uploads/doc6_original.pdf', NULL, NULL, 1, 3, 50.00, 10, 'pago', NULL, 6, CURRENT_TIMESTAMP),
+('Documento 7', '/uploads/doc7_original.pdf', NULL, NULL, 1, 3, 30.00, 3, 'cancelado', NULL, 6, CURRENT_TIMESTAMP),
+('Contrato Comercial', '/uploads/contrato_original.pdf', NULL, NULL, 1, 2, 60.00, 12, 'em_traducao', NULL, 7, CURRENT_TIMESTAMP),
+('Manual Técnico', '/uploads/manual_original.pdf', NULL, NULL, 2, 1, 80.00, 20, 'em_revisao', NULL, 7, CURRENT_TIMESTAMP),
+('Certidão', '/uploads/certidao_original.pdf', '/uploads/certidao_final.pdf', '/uploads/certidao_traduzido.pdf', 1, 4, 30.00, 3, 'finalizado', NULL, 7, CURRENT_TIMESTAMP),
+('Relatório Financeiro', '/uploads/relatorio.pdf', NULL, '/uploads/relatorio_traduzido.docx', 3, 1, 0.00, 15, 'em_revisao', NULL, 7, CURRENT_TIMESTAMP),
+('Apresentação', '/uploads/apresentacao.pptx', '/uploads/apresentacao_final.pptx', '/uploads/apresentacao_traduzida.pptx', 2, 3, 45.00, 9, 'a_pagar', NULL, 7, CURRENT_TIMESTAMP);
 
-INSERT INTO documentos (nome_documento, documento_link, documento_link_final, lingua_origem, lingua_destino, valor, paginas, estado, erros_encontrados, conta_id) VALUES
-('Documento 1', '/uploads/doc1_original.pdf', NULL, 1, 2, 25.00, 5, 'a_pagar', NULL, 6),
-('Documento 2', '/uploads/doc2_original.docx', '/uploads/doc2_final.docx', 2, 1, 40.00, 8, 'finalizado', 'Pequenos erros gramaticais corrigidos', 6),
-('Documento 3', '/uploads/doc3_original.pdf', NULL, 1, 3, 0.00, 6, 'em_analise', NULL, 6),
-('Documento 4', '/uploads/doc4_original.pdf', NULL, 1, 3, 35.00, 7, 'em_revisao', NULL, 6),
-('Documento 5', '/uploads/doc5_original.pdf', NULL, 1, 3, 20.00, 4, 'traduzido', NULL, 6),
-('Documento 6', '/uploads/doc6_original.pdf', NULL, 1, 3, 50.00, 10, 'pago', NULL, 6),
-('Documento 7', '/uploads/doc7_original.pdf', NULL, 1, 3, 30.00, 3, 'cancelado', NULL, 6),
-('Contrato Comercial', '/uploads/contrato_original.pdf', NULL, 1, 2, 60.00, 12, 'em_traducao', NULL, 7),
-('Manual Técnico', '/uploads/manual_original.pdf', NULL, 2, 1, 80.00, 20, 'em_revisao', NULL, 7),
-('Certidão', '/uploads/certidao_original.pdf', '/uploads/certidao_final.pdf', 1, 4, 30.00, 3, 'finalizado', NULL, 7),
-('Relatório Financeiro', '/uploads/relatorio.pdf', NULL, 3, 1, 0.00, 15, 'em_analise', NULL, 7),
-('Apresentação', '/uploads/apresentacao.pptx', '/uploads/apresentacao_final.pptx', 2, 3, 45.00, 9, 'a_pagar', NULL, 7);
-
+INSERT INTO documentos (nome_documento, documento_link, documento_link_traduzido, lingua_origem, lingua_destino, valor, paginas, estado, erros_encontrados, conta_id) VALUES
+('Documento Traduzido Extra', '/uploads/doc_extra_original.pdf', '/uploads/doc_extra_traduzido.pdf', 1, 2, 22.50, 5, 'traduzido', NULL, 6);
 
 INSERT INTO equipas (nome_equipa, tipo) VALUES
 ('Equipa de Tradutores', 'tradutores'),
@@ -186,17 +209,26 @@ INSERT INTO equipas (nome_equipa, tipo) VALUES
 
 INSERT INTO equipa_membros (equipa_id, conta_id) VALUES
 (1, 4),
-(1, 5), -- Carlos Revisor é membro da equipa de revisores
+(2, 5), -- Carlos Revisor é membro da equipa de revisores
+(2, 10),
 (3, 7), -- Sofia na equipa Tradutores FR
-(3, 8), -- Luís na equipa Tradutores FR
-(4, 9); -- Inês na equipa Revisores Técnicos
+(1, 8), -- Luís na equipa Tradutores FR
+(1, 9); -- Inês na equipa Revisores Técnicos
 
-INSERT INTO equipa_documentos (equipa_id, documento_id) VALUES
-(1, 1), -- Equipa de tradutores trabalha no documento 1
-(2, 2), -- Equipa de revisores trabalha no documento 2
-(3, 8), -- Tradutores FR → Contrato Comercial
-(4, 9), -- Revisores Técnicos → Manual Técnico
-(4, 10);
+INSERT INTO equipa_documentos (equipa_id, documento_id, responsavel_upload_id) VALUES
+(1, 3, 4),   -- Ana Tradutora fez upload do Documento 3
+(1, 4, 4),   -- Ana Tradutora fez upload do Documento 4
+(1, 5, 4),   -- Sofia Tradutora fez upload do Documento 5
+(3, 11, 8),  -- Sofia Tradutora fez upload do Relatório Financeiro
+(2, 11, 5),
+(4, 12, 9);  -- Inês Revisora fez upload da Apresentação
+ 
+INSERT INTO equipa_assinaturas (conta_id, documento_id, assinou_documento) VALUES
+(4, 3, 1),
+(9, 3, 1),
+(8, 3, 1),
+(8, 4, 1),
+(4, 4, 1);
 
 -- INSERT INTO recibos (
 --     conta_id,
