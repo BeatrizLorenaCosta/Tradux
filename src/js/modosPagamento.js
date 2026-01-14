@@ -26,6 +26,69 @@ function getAuthHeaders() {
     };
 }
 
+function validarPagamentoCartao() {
+    const form = document.getElementById('form-cartao');
+    const numero = document.getElementById('numeroCartao');
+    const validade = document.getElementById('validade');
+    const cvv = document.getElementById('cvv');
+    const titular = document.getElementById('titular');
+
+    let valido = true;
+
+    // Limpar feedback
+    [numero, validade, cvv, titular].forEach(input => {
+        input.classList.remove('is-invalid');
+    });
+
+    // Número do cartão
+    if (!/^\d{16}$/.test(numero.value.replace(/\s/g, ''))) {
+        numero.classList.add('is-invalid');
+        valido = false;
+    }
+
+    // Validade
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(validade.value.trim())) {
+        validade.classList.add('is-invalid');
+        valido = false;
+    }
+
+    // CVV
+    if (!/^\d{3,4}$/.test(cvv.value.trim())) {
+        cvv.classList.add('is-invalid');
+        valido = false;
+    }
+
+    // Titular
+    if (titular.value.trim().length < 3) {
+        titular.classList.add('is-invalid');
+        valido = false;
+    }
+
+    if (!valido) return; // Para aqui se tiver erro
+
+    // Tudo certo → pagamento simulado
+    fazerPagamento('cartao');
+}
+
+function validarMBWay() {
+    const telefone = document.getElementById('telefoneMB');
+    const telLimpo = telefone.value.replace(/\s/g, '');
+
+    // Limpar feedback
+    telefone.classList.remove('is-invalid');
+
+    // Verifica se começa com 9 e tem 9 dígitos
+    if (!/^9\d{8}$/.test(telLimpo)) {
+        telefone.classList.add('is-invalid');
+        return;
+    }
+
+    // Tudo certo → pagamento simulado
+    fazerPagamento('mbway');
+}
+
+
+
 function fazerPagamento(metodo) {
     const pagamento = JSON.parse(localStorage.getItem('pagamento'));
 
