@@ -308,9 +308,12 @@
                                             </div>
 
                                             <div class="text-end mt-3">
-                                                <button type="button" id="btn-upload-tradutor" class="btn btn-warning" style="display: none;">
-                                                    Fazer Upload do Ficheiro Traduzido
-                                                </button>
+                                                <input type="file" id="file-traduzido" accept=".pdf" style="display:none" />
+
+                                                <button type="button" id="btn-upload-tradutor" onclick="uploadFicheiro(123)" style="display:none;">
+  Fazer Upload do Ficheiro Traduzido
+</button>
+
                                                 <button type="button" class="btn btn-secondary btn-fechar-form">
                                                    Fechar
                                                 </button>

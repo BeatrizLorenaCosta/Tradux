@@ -2,6 +2,9 @@ const express = require('express');
 const { db } = require('../db/connection');
 const { verifyToken, verifyRole } = require('../middleware/auth.middleware');
 const bcrypt = require('bcrypt');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() }); // Usar memória para envio direto ao Supabase
+const { supabase } = require('../supabaseClient');
 
 const router = express.Router();
 
@@ -510,6 +513,64 @@ router.delete('/documento/:id', verifyToken, async (req, res) => {
     } catch (err) {
         console.error('Erro ao eliminar:', err);
         res.status(500).json({ error: 'Erro ao eliminar documento', details: err.message });
+    }
+});
+
+router.post('/documentos/:idDocumento/upload-traduzido', verifyToken, upload.single('file'), async (req, res) => {
+    const { idDocumento } = req.params;
+    const userId = req.user.id;
+
+    if (!req.file) {
+        return res.status(400).json({ message: 'Nenhum ficheiro enviado' });
+    }
+
+    try {
+        // Verificar se o utilizador é responsável pelo upload atual
+        const [rows] = await db.query(`
+            SELECT ed.responsavel_upload_id, d.nome_documento
+            FROM equipa_documentos ed
+            JOIN documentos d ON d.id_documento = ed.documento_id
+            WHERE ed.documento_id = ?
+        `, [idDocumento]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Documento não encontrado' });
+        }
+
+        if (rows[0].responsavel_upload_id !== userId) {
+            return res.status(403).json({ message: 'Sem permissão para fazer upload deste documento' });
+        }
+
+        const fileName = `traduzidos/${idDocumento}_${Date.now()}.pdf`;
+
+        const { data, error: uploadError } = await supabase.storage
+            .from('Documentos')
+            .upload(fileName, req.file.buffer, {
+                contentType: 'application/pdf',
+                upsert: true,
+            });
+
+        if (uploadError) {
+            console.error('Erro no upload supabase:', uploadError);
+            return res.status(500).json({ message: 'Erro ao enviar ficheiro para storage' });
+        }
+
+        const { data: publicUrlData } = supabase.storage
+            .from('Documentos')
+            .getPublicUrl(fileName);
+
+        await db.query(`
+            UPDATE documentos
+            SET documento_link_traduzido = ?,
+                estado = 'traduzido'
+            WHERE id_documento = ?
+        `, [publicUrlData.publicUrl, idDocumento]);
+
+        res.json({ message: 'Upload feito com sucesso', url: publicUrlData.publicUrl });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Erro interno no servidor' });
     }
 });
 

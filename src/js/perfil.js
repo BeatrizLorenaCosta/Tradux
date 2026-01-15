@@ -1,3 +1,4 @@
+
 /* =========================
    INIT
 ========================= */
@@ -618,7 +619,6 @@ async function abrirFormAssinatura(id, btn, tipo) {
 
  
 function atualizarUploadBotao(documento, user) {
-    // Tradutores têm upload, revisores apenas "validar"
     const btn = document.getElementById('btn-upload-tradutor');
 
     const totalMembros = documento.equipa.membros?.length || 0;
@@ -629,14 +629,65 @@ function atualizarUploadBotao(documento, user) {
         btn.onclick = () => uploadFicheiro(documento.id_documento);
     } else {
         btn.style.display = 'none';
+        btn.onclick = null;
     }
-    
 }
 
+
 // Função para upload do ficheiro traduzido e deve alterar o estado para em_revisao
-function uploadFicheiro(id_documento) {
-    
+function uploadFicheiro(idDocumento, event) {
+  if (event) event.preventDefault();
+
+  const inputFile = document.getElementById('file-traduzido');
+
+  // Limpa qualquer ficheiro anterior
+  inputFile.value = '';
+
+  // Define o handler para onchange apenas uma vez
+  inputFile.onchange = async () => {
+    if (inputFile.files.length === 0) {
+      alert('Por favor, selecione um ficheiro para upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', inputFile.files[0]);
+
+    try {
+      const token = localStorage.getItem('token'); // ajusta se guardas o token em outro lugar
+
+      const response = await fetch(`/api/users/documentos/${idDocumento}/upload-traduzido`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro desconhecido no upload');
+      }
+
+      const data = await response.json();
+      alert('Upload realizado com sucesso!');
+      console.log('URL do ficheiro:', data.url);
+
+    } catch (err) {
+      console.error('Erro ao fazer upload:', err);
+      alert(`Erro ao fazer upload: ${err.message}`);
+    }
+  };
+
+  // Abre o seletor de ficheiros
+  inputFile.click();
 }
+
+
+
+
+
+
 
 async function assinarDocumento(idDocumento, idConta, assinou, tipo) {
     await apiFetch(`/api/users/documentos/${idDocumento}/assinatura`, {

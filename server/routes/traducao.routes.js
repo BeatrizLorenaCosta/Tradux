@@ -63,7 +63,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    const filePath = `${contaId}/${Date.now()}_${safeName}`;
+    const filePath = `temp/${Date.now()}_${safeName}`;
 
     // upload para o Supabase
     const { data, error } = await supabase.storage
