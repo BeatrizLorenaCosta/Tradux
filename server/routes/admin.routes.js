@@ -18,6 +18,8 @@ router.get('/me', verifyToken, async (req, res) => {
     }
 });
 
+
+
 /* Dashboard admin */
 // Últimos documentos enviados
 router.get('/ultimos-documentos', verifyToken, async (req, res) => {
@@ -25,6 +27,7 @@ router.get('/ultimos-documentos', verifyToken, async (req, res) => {
         const [docs ] = await db.query(`
             SELECT 
                 d.id_documento,
+                d.nome_documento,
                 c.nome_utilizador AS cliente_nome,
                 d.estado,
                 d.data_envio,
@@ -57,6 +60,8 @@ router.get('/estatisticas', verifyToken, async (req, res) => {
     }
 });
 
+
+
 /* Documentos admin */
 // Listar documentos
 router.get('/documentos', verifyToken, async (req, res) => {
@@ -64,20 +69,34 @@ router.get('/documentos', verifyToken, async (req, res) => {
         const [rows] = await db.query(`
             SELECT
                 d.id_documento,
+                d.nome_documento,
                 c.nome_utilizador AS cliente_nome,
                 d.estado,
                 d.data_envio,
+                d.valor,
                 lo.sigla AS lingua_origem,
                 ld.sigla AS lingua_destino,
-                ed.equipa_id,
-                e.nome_equipa
+
+                GROUP_CONCAT(DISTINCT e.nome_equipa
+                    ORDER BY e.nome_equipa
+                    SEPARATOR ', '
+                ) AS equipas
+
             FROM documentos d
             JOIN linguas lo ON lo.id_lingua = d.lingua_origem
             JOIN linguas ld ON ld.id_lingua = d.lingua_destino
             JOIN contas c ON c.id_conta = d.conta_id
             LEFT JOIN equipa_documentos ed ON ed.documento_id = d.id_documento
             LEFT JOIN equipas e ON e.id_equipa = ed.equipa_id
-            ORDER BY d.data_envio DESC;
+            
+            GROUP BY
+                d.id_documento,
+                d.nome_documento,
+                c.nome_utilizador,
+                d.estado,
+                d.data_envio,
+                lo.sigla,
+                ld.sigla;
 
         `);
         res.json(rows);
@@ -85,6 +104,78 @@ router.get('/documentos', verifyToken, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// Receber dados de um documento específico
+router.get('/documentos/:documentoId', verifyToken, async (req, res) => {
+    const { documentoId } = req.params;
+
+    try {
+        const [rows] = await db.query(`
+            SELECT
+                d.id_documento,
+                d.nome_documento,
+                d.valor,
+                lo.sigla AS lingua_origem,
+                ld.sigla AS lingua_destino
+            FROM documentos d
+            JOIN linguas lo ON lo.id_lingua = d.lingua_origem
+            JOIN linguas ld ON ld.id_lingua = d.lingua_destino
+            WHERE d.id_documento = ?
+        `, [documentoId]);
+
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Alterar valor do documento
+router.put('/documentos/:idDocumento/valor', verifyToken, async (req, res) => {
+    const { idDocumento } = req.params;
+    const { valor } = req.body;
+
+    if (valor === undefined) {
+        return res.status(400).json({ message: 'Valor é obrigatório.' });
+    }
+
+    try {
+        const [result] = await db.query(
+            `UPDATE documentos SET valor = ? WHERE id_documento = ?`,
+            [valor, idDocumento]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Documento não encontrado.' });
+        }
+
+        res.json({ message: 'Valor atualizado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Eliminar documento
+router.delete('/documentos/:idDocumento', verifyToken, async (req, res) => {
+    const { idDocumento } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM documentos WHERE id_documento = ? AND estado = 'cancelado'`,
+            [idDocumento]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Documento não encontrado.' });
+        }
+
+        res.json({ message: 'Documento eliminado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
+
 
 /* Utilizadores admin */
 // Listar todos os utilizadores
@@ -96,6 +187,7 @@ router.get('/users', verifyToken, verifyRole(1), async (req, res) => {
                 co.nome_utilizador,
                 co.email,
                 co.username,
+                co.cargo_id,
                 ca.nome_cargo AS nome_cargo
             FROM contas co
             JOIN cargo ca ON co.cargo_id = ca.id_cargo
@@ -105,6 +197,76 @@ router.get('/users', verifyToken, verifyRole(1), async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+// Receber dados de um utilizador específico
+router.get('/users/:userId', verifyToken, verifyRole(1), async (req, res) => {
+    const { userId } = req.params;
+    try {
+        const [rows] = await db.query(`
+            SELECT
+                co.id_conta,
+                co.nome_utilizador,
+                co.email,
+                co.username,
+                co.cargo_id
+            FROM contas co
+            WHERE co.id_conta = ?
+        `, [userId]);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
+        res.json(rows[0]);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Alterar cargo do utilizador
+router.put('/users/:idConta/cargo', verifyToken, verifyRole(1), async (req, res) => {
+    const { idConta } = req.params;
+    const { cargo_id } = req.body;
+    
+    if (!cargo_id) {
+        return res.status(400).json({ message: 'Cargo_id é obrigatório.' });
+    }
+
+    try {
+        const [result] = await db.query(
+            `UPDATE contas SET cargo_id = ? WHERE id_conta = ?`,
+            [cargo_id, idConta]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
+
+        res.json({ message: 'Cargo atualizado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Eliminar utilizador
+router.delete('/users/:idConta', verifyToken, verifyRole(1), async (req, res) => {
+    const { idConta } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM contas WHERE id_conta = ?`,
+            [idConta]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Utilizador não encontrado.' });
+        }
+
+        res.json({ message: 'Utilizador eliminado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 
 /* Equipas admin */
 // Listar equipas
@@ -126,6 +288,17 @@ router.get('/equipas', verifyToken, async (req, res) => {
                     SEPARATOR ', '
                 ) AS linguas,
 
+                GROUP_CONCAT(DISTINCT l.sigla
+                    ORDER BY l.sigla
+                    SEPARATOR ', '
+                ) AS siglas_linguas,
+
+                GROUP_CONCAT(
+                    DISTINCT CONCAT('#TRX-', LPAD(ed.documento_id, 4, '0'))
+                    ORDER BY ed.documento_id
+                    SEPARATOR ', '
+                ) AS documentos,
+
                 COUNT(DISTINCT ed.documento_id) AS total_documentos,
 
                 CASE
@@ -145,6 +318,102 @@ router.get('/equipas', verifyToken, async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
+
+router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
+    const { idEquipa } = req.params;
+    try {
+        const [rows] = await db.query(`
+            SELECT e.id_equipa,
+                e.nome_equipa,
+                e.tipo,
+                COALESCE(membros.membros_json, JSON_ARRAY()) AS membros,
+                COALESCE(documentos.documentos_json, JSON_ARRAY()) AS documentos
+            FROM equipas e
+            LEFT JOIN (
+                SELECT em.equipa_id,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_conta', c.id_conta,
+                            'nome_utilizador', c.nome_utilizador,
+                            'lingua_principal', lp.sigla,
+                            'lingua_secundaria', ls.sigla
+                        )
+                    ) AS membros_json
+                FROM equipa_membros em
+                JOIN contas c ON c.id_conta = em.conta_id
+                LEFT JOIN perfis_linguisticos pl ON pl.conta_id = c.id_conta
+                LEFT JOIN linguas lp ON lp.id_lingua = pl.lingua_principal
+                LEFT JOIN linguas ls ON ls.id_lingua = pl.lingua_secundaria
+                GROUP BY em.equipa_id
+            ) membros ON membros.equipa_id = e.id_equipa
+            LEFT JOIN (
+                SELECT ed.equipa_id,
+                    JSON_ARRAYAGG(
+                        JSON_OBJECT(
+                            'id_documento', d.id_documento,
+                            'nome_documento', d.nome_documento,
+                            'lingua_origem', lo.sigla,
+                            'lingua_destino', ld.sigla
+                        )
+                    ) AS documentos_json
+                FROM equipa_documentos ed
+                JOIN documentos d ON d.id_documento = ed.documento_id
+                LEFT JOIN linguas lo ON lo.id_lingua = d.lingua_origem
+                LEFT JOIN linguas ld ON ld.id_lingua = d.lingua_destino
+                GROUP BY ed.equipa_id
+            ) documentos ON documentos.equipa_id = e.id_equipa
+            WHERE e.id_equipa = ?;
+        `, [idEquipa]);
+
+        if (!rows.length) return res.status(404).json({ message: 'Equipa não encontrada' });
+
+        // converter JSON arrays
+        const equipa = rows[0];
+        equipa.membros = equipa.membros || '[]';
+        equipa.documentos = equipa.documentos || '[]';
+
+        res.json(equipa);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.put('/equipas/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { nome_equipa } = req.body;
+
+    try {
+        await db.query(`UPDATE equipas SET nome_equipa = ? WHERE id_equipa = ?`, [nome_equipa, id]);
+        res.json({ message: 'Equipa atualizada com sucesso' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/equipas/:id/utilizadores/:conta_id', verifyToken, async (req, res) => {
+    const { id, conta_id } = req.params;
+
+    try {
+        await db.query(`DELETE FROM equipa_membros WHERE equipa_id = ? AND conta_id = ?`, [id, conta_id]);
+        res.json({ message: 'Membro removido' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/documentos/:id/desassociar', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { equipa } = req.body;
+
+    try {
+        await db.query(`DELETE FROM equipa_documentos WHERE documento_id = ? AND equipa_id = ?`, [id, equipa]);
+        res.json({ message: 'Documento removido da equipa' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+
 
 // Criar equipa
 router.post('/equipas', verifyToken, async (req, res) => {
@@ -215,60 +484,83 @@ router.post('/equipas/:idEquipa/utilizadores', verifyToken, async (req, res) => 
     }
 });
 
+// Eliminar equipa
+router.delete('/equipas/:idEquipa', verifyToken, verifyRole(1), async (req, res) => {
+    const { idEquipa } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM equipas WHERE id_equipa = ?`,
+            [idEquipa]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Equipa não encontrado.' });
+        }
+
+        res.json({ message: 'Equipa eliminado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // Associar Documento a Equipas
 router.post('/documentos/associar', verifyToken, async (req, res) => {
-    const { documento_id, equipa_tradutores, equipa_revisores } = req.body;
+    const { documento_id, equipa } = req.body;
 
-    if (!documento_id || !equipa_tradutores || !equipa_revisores) {
+    if (!documento_id || !equipa) {
         return res.status(400).json({ message: 'Dados incompletos.' });
     }
 
-    const [[trad]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_tradutores]
-    );
-
-    const [[rev]] = await db.query(
-        `SELECT tipo FROM equipas WHERE id_equipa = ?`,
-        [equipa_revisores]
-    );
-
-    if (trad.tipo !== 'tradutores' || rev.tipo !== 'revisores') {
-        return res.status(400).json({
-            message: 'Tipos de equipa inválidos.'
-        });
-    }
-
-
     try {
-        // Verificar ocupação das equipas
-        const [equipas] = await db.query(`
-            SELECT e.id_equipa, COUNT(ed.documento_id) AS total
-            FROM equipas e
-            LEFT JOIN equipa_documentos ed ON ed.equipa_id = e.id_equipa
-            WHERE e.id_equipa IN (?, ?)
-            GROUP BY e.id_equipa
-        `, [equipa_tradutores, equipa_revisores]);
-
-        for (const eq of equipas) {
-            if (eq.total >= 3) {
-                return res.status(409).json({
-                    message: 'Uma das equipas já está ocupada.'
-                });
-            }
-        }
-
-        // Associar documento
-        await db.query(
-            `INSERT INTO equipa_documentos (equipa_id, documento_id)
-             VALUES (?, ?), (?, ?)`,
-            [
-                equipa_tradutores, documento_id,
-                equipa_revisores, documento_id
-            ]
+        const [[equ]] = await db.query(
+            `SELECT tipo FROM equipas WHERE id_equipa = ?`,
+            [equipa]
         );
 
-        res.json({ message: 'Documento associado às equipas.' });
+        if (!equ) {
+            return res.status(404).json({ message: 'Equipa não encontrada.' });
+        }
+
+        if (equ.tipo !== 'tradutores' && equ.tipo !== 'revisores') {
+            return res.status(400).json({ message: 'Tipos de equipa inválidos.' });
+        }
+
+        const [ver] = await db.query(`
+            SELECT COUNT(*) AS total
+            FROM equipa_documentos
+            WHERE equipa_id = ?
+        `, [equipa]);
+
+        if (ver[0].total >= 3) {
+            return res.status(409).json({ message: 'A equipa já está ocupada.' });
+        }
+
+        const [[doc]] = await db.query(
+            `SELECT estado FROM documentos WHERE id_documento = ?`,
+            [documento_id]
+        );
+
+        if (!doc) {
+            return res.status(404).json({ message: 'Documento não encontrado.' });
+        }
+
+        if (!['pago', 'traduzido'].includes(doc.estado)) {
+            return res.status(409).json({
+                message: 'Estado do documento não permite associação.'
+            });
+        }
+
+        await db.query(
+            `INSERT INTO equipa_documentos (equipa_id, documento_id)
+             VALUES (?, ?)`,
+            [equipa, documento_id]
+        );
+
+        res.status(201).json({
+            message: 'Documento associado à equipa.',
+            tipo_equipa: equ.tipo
+        });
     } catch (err) {
         if (err.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({
@@ -279,10 +571,69 @@ router.post('/documentos/associar', verifyToken, async (req, res) => {
     }
 });
 
+// Alterar estado do documento
+router.put('/documentos/:id/estado', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const { estado } = req.body;
+    let estadoFinal;
+
+    const estadosPermitidos = [
+        'traduzido',
+        'pago',
+        'em_analise'
+    ];
+
+    if (!estadosPermitidos.includes(estado)) {
+        return res.status(400).json({
+            message: 'Estado inválido.'
+        });
+    }
+
+    if (estado == 'pago') estadoFinal = 'em_traducao';
+    if (estado == 'traduzido') estadoFinal = 'em_revisao';
+    if (estado == 'em_analise') estadoFinal = 'a_pagar';
+
+    try {
+        const [[doc]] = await db.query(
+            `SELECT estado FROM documentos WHERE id_documento = ?`,
+            [id]
+        );
+
+        if (!doc) {
+            return res.status(404).json({
+                message: 'Documento não encontrado.'
+            });
+        }
+
+        await db.query(
+            `UPDATE documentos SET estado = ? WHERE id_documento = ?`,
+            [estadoFinal, id]
+        );
+
+        res.json({
+            message: 'Estado do documento atualizado.',
+            estadoFinal
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 
-// Apenas admins podem criar cargos
-router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {
+
+// Carregar cargos
+router.get('/cargos', verifyToken, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id_cargo, nome_cargo FROM cargo');
+        res.json(rows);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Adicionar cargos
+router.post('/cargos', verifyToken, verifyRole(1), async (req, res) => {
     const { nome_cargo } = req.body;
     if (!nome_cargo) return res.status(400).json({ message: 'Nome do cargo obrigatório' });
 
@@ -295,34 +646,109 @@ router.post('/cargo', verifyToken, verifyRole(1), async (req, res) => {
     }
 });
 
+router.put('/cargos/:idCargo', verifyToken, verifyRole(1), async (req, res) => {
+    const { idCargo } = req.params;
+    const { nome_cargo } = req.body;
+    if (!nome_cargo) return res.status(400).json({ message: 'Nome do cargo obrigatório' });
 
-// Listar documentos pendentes
-router.get('/pendentes', verifyToken, async (req, res) => {
     try {
-        const [rows] = await db.query('SELECT * FROM documentos WHERE estado = "em_analise"');
-        res.json(rows);
+        await db.query(
+            `UPDATE cargo SET nome_cargo = ? WHERE id_cargo = ?`,
+            [nome_cargo, idCargo]
+        );
+
+        res.json({
+            message: 'Nome do cargo atualizado.',
+            nome_cargo
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
-// Atribuir documento a equipa/tradutor
-router.post('/atribuir', verifyToken, async (req, res) => {
-    const { documento_id, conta_id } = req.body;
-    if (!documento_id || !conta_id) return res.status(400).json({ message: 'Documento e conta obrigatórios' });
+router.delete('/cargos/:idCargo', verifyToken, verifyRole(1), async (req, res) => {
+    const { idCargo } = req.params;
 
     try {
         const [result] = await db.query(
-            'INSERT INTO equipas (conta_id, documento_id) VALUES (?, ?)',
-            [conta_id, documento_id]
+            `DELETE FROM cargo WHERE id_cargo = ?`,
+            [idCargo]
         );
-        res.json({ id: result.insertId, documento_id, conta_id });
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Cargo não encontrado.' });
+        }
+
+        res.json({ message: 'Cargo eliminado com sucesso.' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
 });
 
 
+// Carregar linguas
+router.get('/linguas', verifyToken, async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id_lingua, nome_lingua, sigla FROM linguas');
+        res.json(rows);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
+router.post('/linguas', verifyToken, verifyRole(1), async (req, res) => {
+    const { nome_lingua, sigla } = req.body;
+    if (!nome_lingua) return res.status(400).json({ message: 'Nome da lingua obrigatória' });
+    if (!sigla) return res.status(400).json({ message: 'Sigla obrigatória' });
+
+    try {
+        const [result] = await db.query('INSERT INTO linguas (nome_lingua, sigla) VALUES (?, ?)', [nome_lingua, sigla]);
+        res.json({ id: result.insertId, nome_lingua, sigla });
+    } catch (err) {
+        if (err.code === 'ER_DUP_ENTRY') return res.status(409).json({ message: 'Lingua já existe' });
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.put('/linguas/:idLingua', verifyToken, verifyRole(1), async (req, res) => {
+    const { idLingua } = req.params;
+    const { nome_lingua, sigla } = req.body;
+    if (!nome_lingua) return res.status(400).json({ message: 'Nome da lingua obrigatória' });
+    if (!sigla) return res.status(400).json({ message: 'Sigla obrigatória' });
+
+    try {
+        await db.query(
+            `UPDATE linguas SET nome_lingua = ?, sigla = ? WHERE id_lingua = ?`,
+            [nome_lingua, sigla, idLingua]
+        );
+
+        res.json({
+            message: 'Lingua atualizada.',
+            nome_lingua
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete('/linguas/:idLingua', verifyToken, verifyRole(1), async (req, res) => {
+    const { idLingua } = req.params;
+
+    try {
+        const [result] = await db.query(
+            `DELETE FROM linguas WHERE id_lingua = ?`,
+            [idLingua]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Lingua não encontrado.' });
+        }
+
+        res.json({ message: 'Lingua eliminado com sucesso.' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
 
 module.exports = router;

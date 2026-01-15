@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Toggle menu mobile
+    const token = localStorage.getItem('token');
+    console.log('Token:', token);
     const menuToggle = document.getElementById('menu-toggle');
     const navUl = document.querySelector('nav ul');
     if (menuToggle && navUl) {
@@ -72,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const nav = document.getElementById('main-nav');
         if (!nav) return;
 
-        // Página atual (ex: "perfil.html")
+        // Página atual
         const paginaAtual = window.location.pathname.split('/').pop();
 
         // Remove links dinâmicos antigos
@@ -96,14 +98,18 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (user) {
-            // Perfil e Tradução
-            nav.appendChild(criarLink('traducao.html', 'Tradução'));
-            nav.appendChild(criarLink('perfil.html', 'Perfil'));
-            
-
-            // Admin (apenas cargo_id === 1)
             if (user.cargo_id === 1) {
+                nav.appendChild(criarLink('perfil.html', 'Perfil'));
                 nav.appendChild(criarLink('admin.html', 'Admin'));
+            }
+
+            if (user.cargo_id == 3 || user.cargo_id == 4) {
+                nav.appendChild(criarLink('perfil.html', 'Perfil'));
+            }
+
+            if (user.cargo_id == 2) {
+                nav.appendChild(criarLink('traducao.html', 'Tradução'));
+                nav.appendChild(criarLink('perfil.html', 'Perfil'));
             }
 
             // Logout
@@ -120,7 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             nav.appendChild(logoutLink);
-
         } else {
             // Login & Signup
             nav.appendChild(criarLink('login-signup.html', 'Login & Signup'));

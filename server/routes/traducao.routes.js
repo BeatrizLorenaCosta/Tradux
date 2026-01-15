@@ -1,20 +1,20 @@
 const express = require('express');
 const multer = require('multer');
-const jwt = require('jsonwebtoken');
 const { supabase } = require('../supabaseClient');
 const { db } = require('../db/connection');
+const { verifyToken } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 
 // multer em memória
 const upload = multer({ storage: multer.memoryStorage() });
 
-// nome do bucket (confere no Supabase)
+// nome do bucket no Supabase
 const BUCKET = 'Documentos';
 
-/* =========================
-   GET línguas
-========================= */
+// =======================
+// GET LÍNGUAS
+// =======================
 router.get('/linguas', async (req, res) => {
   try {
     const [rows] = await db.query(
@@ -27,28 +27,15 @@ router.get('/linguas', async (req, res) => {
   }
 });
 
-/* =========================
-   POST upload PDF
-========================= */
-router.post('/upload', upload.single('file'), async (req, res) => {
+// =======================
+// UPLOAD DOCUMENTO (PDF)
+// =======================
+router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
+  const { origem, destino, paginas } = req.body;
+  const contaId = req.user.id;
+
   try {
-    /* ---------- token ---------- */
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-      return res.status(401).json({ error: 'Token não enviado' });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const decoded = jwt.decode(token);
-
-    if (!decoded || !decoded.sub) {
-      return res.status(401).json({ error: 'Token inválido' });
-    }
-
-    const userId = decoded.sub; // ✅ ID do utilizador Supabase
-
-    /* ---------- ficheiro ---------- */
+    // validações do ficheiro
     if (!req.file) {
       return res.status(400).json({ error: 'Nenhum ficheiro enviado' });
     }
@@ -61,17 +48,24 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: 'Máximo 10MB' });
     }
 
-    /* ---------- nome seguro ---------- */
-    const originalName = req.file.originalname;
-    const safeName = originalName
+    // validações das línguas
+    const origemId = parseInt(origem, 10);
+    const destinoId = parseInt(destino, 10);
+    const numPaginas = parseInt(paginas, 10) || 0;
+
+    if (isNaN(origemId) || isNaN(destinoId)) {
+      return res.status(400).json({ error: 'ID de língua inválido' });
+    }
+
+    // nome seguro
+    const safeName = req.file.originalname
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9._-]/g, '_');
 
-    // 📂 estrutura: userId/timestamp_nome.pdf
-    const filePath = `${userId}/${Date.now()}_${safeName}`;
+    const filePath = `${contaId}/${Date.now()}_${safeName}`;
 
-    /* ---------- upload Supabase ---------- */
+    // upload para o Supabase
     const { data, error } = await supabase.storage
       .from(BUCKET)
       .upload(filePath, req.file.buffer, {
@@ -79,17 +73,35 @@ router.post('/upload', upload.single('file'), async (req, res) => {
         upsert: false
       });
 
-    if (error) {
-      console.error('Erro Supabase:', error);
-      throw error;
-    }
+    if (error) throw error;
 
-    console.log('Upload OK:', data.path);
+    // URL público
+    const { data: publicUrlData } = supabase.storage
+      .from(BUCKET)
+      .getPublicUrl(data.path);
+
+    // inserir na BD
+    await db.query(
+      `INSERT INTO documentos
+      (nome_documento, documento_link, documento_link_final, lingua_origem, lingua_destino, valor, paginas, estado, erros_encontrados, conta_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.file.originalname,
+        publicUrlData.publicUrl,
+        null,
+        origemId,
+        destinoId,
+        0,
+        numPaginas,
+        'em_analise',
+        null,
+        contaId
+      ]
+    );
 
     res.json({
       success: true,
-      path: data.path,
-      userId
+      documento_link: publicUrlData.publicUrl
     });
 
   } catch (err) {

@@ -35,8 +35,9 @@ loginForm.addEventListener('submit', async (e) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
 
+
         // Redirecionar para index.html
-        window.location.href = '/index.html';
+        window.location.href = 'index.html';
 
     } catch (err) {
         console.error(err);

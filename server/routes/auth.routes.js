@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 const { db } = require('../db/connection');
 require('dotenv').config();
 
@@ -23,7 +24,7 @@ router.post('/login', async (req, res) => {
         const token = jwt.sign(
             { id: user.id_conta, username: user.username, cargo_id: user.cargo_id },
             process.env.JWT_SECRET,
-            { expiresIn: '2h' }
+            { expiresIn: '12h' }
         );
 
         res.json({ token, user: { id: user.id_conta, username: user.username, cargo_id: user.cargo_id } });

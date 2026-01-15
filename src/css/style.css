@@ -316,7 +316,7 @@ header .container-header {
 
 .containerSessao {
     width: 100%;
-    max-width: 460px;  
+    max-width: 70%;  
     padding: 40px;
     background-color: rgba(255, 255, 255, 0.95);
     border-radius: var(--radius);
@@ -503,6 +503,24 @@ header .container-header {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+.nav-parent {
+    cursor: pointer;
+}
+
+.toggle-icon {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.nav-submenu {
+    margin-left: 0.5rem;
+}
+
+.nav-submenu .nav-item {
+    font-size: 0.95rem;
+}
+
 
 /* Estilo para a lista de dados no perfil */
 .user-data-list {
