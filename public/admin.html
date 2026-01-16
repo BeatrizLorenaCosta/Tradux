@@ -354,14 +354,14 @@
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa</label>
                                                 <select name="equipa_id" class="form-select" required>
-                                                    <!-- carregar equipas -->
+                                                    <<option value="">Selecionar equipa</option>
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Utilizador</label>
-                                                <select name="conta_id" class="form-select" required>
-                                                    <!-- apenas tradutores ou revisores conforme equipa -->
+                                                <select name="conta_id" class="form-select" disabled required>
+                                                    <option value="">Selecionar utilizador</option>
                                                 </select>
                                             </div>
 
@@ -384,14 +384,21 @@
                                             <div class="mb-3">
                                                 <label class="form-label">Documento</label>
                                                 <select name="documento_id" class="form-select" required>
-                                                    <!-- documentos em análise -->
+                                                    <option value="">Selecionar documento</option>
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa de Tradutores</label>
-                                                <select name="equipa_id" class="form-select" required>
-                                                    <!-- apenas equipas livres de tradutores -->
+                                                <select name="equipa_id" class="form-select" disabled required>
+                                                    <option value="">Selecionar equipa</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Responsável</label>
+                                                <select name="responsavel_id" class="form-select" disabled required>
+                                                    <option value="">Selecionar responsável</option>
                                                 </select>
                                             </div>
 
@@ -412,16 +419,24 @@
                                             <div class="mb-3">
                                                 <label class="form-label">Documento</label>
                                                 <select name="documento_id" class="form-select" required>
-                                                    <!-- documentos em análise -->
+                                                    <option value="">Selecionar documento</option>
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Equipa de Revisores</label>
-                                                <select name="equipa_id" class="form-select" required>
-                                                    <!-- apenas equipas livres de revisores -->
+                                                <select name="equipa_id" class="form-select" disabled required>
+                                                    <option value="">Selecionar equipa</option>
                                                 </select>
                                             </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Responsável</label>
+                                                <select name="responsavel_id" class="form-select" disabled required>
+                                                    <option value="">Selecionar responsável</option>
+                                                </select>
+                                            </div>
+
 
                                             <div class="text-end">
                                                 <button class="btn btn-warning">

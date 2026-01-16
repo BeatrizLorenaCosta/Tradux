@@ -90,7 +90,7 @@ router.get('/me/documentos', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/me/equipa', verifyToken, async (req, res) => {
+router.get('/me/equipa', verifyToken, verifyRole([3, 4]), async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT 
@@ -571,6 +571,63 @@ router.post('/documentos/:idDocumento/upload-traduzido', verifyToken, verifyRole
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Erro interno no servidor' });
+    }
+});
+
+router.get('/linguas', verifyToken, verifyRole([3, 4]), async (req, res) => {
+    const contaId = req.user.id;
+
+    try {
+        const [linguas] = await db.query(`SELECT id_lingua, nome_lingua, sigla FROM linguas ORDER BY nome_lingua`);
+
+        const [perfil] = await db.query(
+            `SELECT lingua_principal, lingua_secundaria 
+             FROM perfis_linguisticos 
+             WHERE conta_id = ?`,
+            [contaId]
+        );
+
+        console.log(contaId);
+        console.log(perfil);
+
+        res.json({
+            linguas,
+            perfil: perfil[0] || null
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Erro ao obter linguas' });
+    }
+});
+
+router.put('/linguas', verifyToken, verifyRole([3, 4]), async (req, res) => {
+    const contaId = req.user.id;
+    const { lingua_principal_id, lingua_secundaria_id } = req.body;
+
+    if (!lingua_principal_id) return res.status(400).json({ message: 'Lingua principal é obrigatória' });
+
+    try {
+        const [existing] = await db.query(`SELECT id_perfil_linguistico FROM perfis_linguisticos WHERE conta_id = ?`, [contaId]);
+
+        if (existing.length > 0) {
+            await db.query(
+                `UPDATE perfis_linguisticos 
+                 SET lingua_principal = ?, lingua_secundaria = ? 
+                 WHERE conta_id = ?`,
+                [lingua_principal_id, lingua_secundaria_id || null, contaId]
+            );
+        } else {
+            await db.query(
+                `INSERT INTO perfis_linguisticos (conta_id, lingua_principal, lingua_secundaria) 
+                 VALUES (?, ?, ?)`,
+                [contaId, lingua_principal_id, lingua_secundaria_id || null]
+            );
+        }
+
+        res.json({ message: 'Linguas atualizadas com sucesso' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Erro ao atualizar linguas' });
     }
 });
 

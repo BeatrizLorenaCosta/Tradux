@@ -80,6 +80,46 @@ function initCamposDependentes(formId, primeiroSeletor, segundoSeletor, carregar
     form.addEventListener('reset', () => setTimeout(atualizar));
 }
 
+function initCamposDependentes3(formId, primeiroSel, segundoSel, terceiroSel, carregarSegundo, carregarTerceiro) {
+    const form = document.getElementById(formId);
+    if (!form) return;
+
+    const primeiro = form.querySelector(primeiroSel);
+    const segundo = form.querySelector(segundoSel);
+    const terceiro = form.querySelector(terceiroSel);
+    if (!primeiro || !segundo || !terceiro) return;
+
+    const atualizar = () => {
+        
+        if (!primeiro.value) {
+            segundo.disabled = true;
+            segundo.value = '';
+            terceiro.disabled = true;
+            terceiro.value = '';
+        } else {
+            segundo.disabled = false;
+            if (typeof carregarSegundo === 'function') carregarSegundo(segundo, primeiro);
+
+            if (!segundo.value) {
+                terceiro.disabled = true;
+                terceiro.value = '';
+            } else {
+                terceiro.disabled = false;
+                if (typeof carregarTerceiro === 'function') carregarTerceiro(terceiro, segundo);
+            }
+        }
+    };
+
+    // estado inicial
+    atualizar();
+
+    // listeners
+    primeiro.addEventListener('change', atualizar);
+    segundo.addEventListener('change', atualizar);
+    form.addEventListener('reset', () => setTimeout(atualizar));
+}
+
+
 /* =========================
    APLICAR AOS FORMS
 ========================= */
@@ -96,20 +136,27 @@ initCamposDependentes(
     }
 );
 
-// form-doc-equipa-tradutores: primeiro select = documento, segundo select = equipa
-initCamposDependentes(
+// form-doc-equipa-tradutores
+initCamposDependentes3(
     'form-doc-equipa-tradutores',
     'select[name="documento_id"]',
     'select[name="equipa_id"]',
-    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'tradutores')
+    'select[name="responsavel_id"]',
+    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'tradutores'),
+    (responsavelSel, equipaSel) => carregarResponsaveisPorEquipa(responsavelSel, equipaSel.value)
 );
 
-initCamposDependentes(
+// form-doc-equipa-revisores
+initCamposDependentes3(
     'form-doc-equipa-revisores',
     'select[name="documento_id"]',
     'select[name="equipa_id"]',
-    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'revisores')
+    'select[name="responsavel_id"]',
+    (equipaSel, docSel) => onDocumentoChange(docSel, equipaSel, 'revisores'),
+    (responsavelSel, equipaSel) => carregarResponsaveisPorEquipa(responsavelSel, equipaSel.value)
 );
+
+
 
 // form-criar-equipa: primeiro select = tipo, segundo input = nome_equipa
 initCamposDependentes(
@@ -134,9 +181,7 @@ const formCriarEquipa = document.getElementById('form-criar-equipa');
 // carregar selects iniciais
 formEquipaUser && carregarEquipasSelect(formEquipaUser.querySelector('select[name="equipa_id"]'));
 formDocEquipaTradutores && carregarDocumentosSelect(formDocEquipaTradutores.querySelector('select[name="documento_id"]'), 'tradutores');
-formDocEquipaTradutores && carregarEquipasLivres(formDocEquipaTradutores.querySelector('select[name="equipa_id"]'), 'tradutores');
 formDocEquipaRevisores && carregarDocumentosSelect(formDocEquipaRevisores.querySelector('select[name="documento_id"]'), 'revisores');
-formDocEquipaRevisores && carregarEquipasLivres(formDocEquipaRevisores.querySelector('select[name="equipa_id"]'), 'revisores');
 
 /* -------------------------
    SUBMITS
@@ -190,13 +235,12 @@ formDocEquipaTradutores?.addEventListener('submit', async e => {
     e.preventDefault();
     const estaAberto = document.getElementById('form-doc-equipa-tradutores-wrapper').style.display === 'block';
 
-    await apiFetch('/api/admin/documentos/associar', { method:'POST', body:JSON.stringify({ documento_id: formDocEquipaTradutores.documento_id.value, equipa: formDocEquipaTradutores.equipa_id.value }) });
+    await apiFetch('/api/admin/documentos/associar', { method:'POST', body:JSON.stringify({ documento_id: formDocEquipaTradutores.documento_id.value, equipa: formDocEquipaTradutores.equipa_id.value, responsavel_id: formDocEquipaTradutores.responsavel_id.value }) });
     await apiFetch(`/api/admin/documentos/${formDocEquipaTradutores.documento_id.value}/estado`, { method:'PUT', body:JSON.stringify({ estado:'pago' }) });
 
     formDocEquipaTradutores.reset();
     carregarTudo();
     carregarDocumentosSelect(formDocEquipaTradutores.querySelector('select[name="documento_id"]'), 'tradutores');
-    carregarEquipasLivres(formDocEquipaTradutores.querySelector('select[name="equipa_id"]'), 'tradutores');
 
     document.getElementById('form-doc-equipa-tradutores-wrapper').style.display = estaAberto ? 'none' : 'block';
     document.getElementById('toggle-form-doc-equipa-tradutores').textContent = estaAberto ? '+ Associar Documento a Equipa de Tradutores':'Fechar Formulário';
@@ -206,7 +250,7 @@ formDocEquipaRevisores?.addEventListener('submit', async e => {
     e.preventDefault();
     const estaAberto = document.getElementById('form-doc-equipa-revisores-wrapper').style.display === 'block';
 
-    await apiFetch('/api/admin/documentos/associar', { method:'POST', body:JSON.stringify({ documento_id: formDocEquipaRevisores.documento_id.value, equipa: formDocEquipaRevisores.equipa_id.value }) });
+    await apiFetch('/api/admin/documentos/associar', { method:'POST', body:JSON.stringify({ documento_id: formDocEquipaRevisores.documento_id.value, equipa: formDocEquipaRevisores.equipa_id.value, responsavel_id: formDocEquipaRevisores.responsavel_id.value }) });
     await apiFetch(`/api/admin/documentos/${formDocEquipaRevisores.documento_id.value}/estado`, { method:'PUT', body:JSON.stringify({ estado:'traduzido' }) });
 
     formDocEquipaRevisores.reset();
@@ -238,17 +282,14 @@ async function carregarEquipas() {
 
     if (formDocEquipaTradutores) {
         const selDoc = formDocEquipaTradutores.querySelector('select[name="documento_id"]');
-        const selTrad = formDocEquipaTradutores.querySelector('select[name="equipa_id"]');
         carregarDocumentosSelect(selDoc, 'tradutores');
-        carregarEquipasLivres(selTrad, 'tradutores');
     }
 
     if (formDocEquipaRevisores) {
         const selDoc2 = formDocEquipaRevisores.querySelector('select[name="documento_id"]');
-        const selRev = formDocEquipaRevisores.querySelector('select[name="equipa_id"]');
         carregarDocumentosSelect(selDoc2, 'revisores');
-        carregarEquipasLivres(selRev, 'revisores');
     }
+
 
     renderTabela(tbody,
         equipas.map(e => `
@@ -285,7 +326,7 @@ async function carregarEquipas() {
 async function carregarEquipasSelect(select) {
     const equipas = await apiFetch('/api/admin/equipas');
 
-    select.innerHTML = `<option value="">Selecionar</option>`;
+    select.innerHTML = `<option value="">Selecionar equipa</option>`;
     equipas.forEach(e => {
         select.innerHTML += `
             <option value="${e.id_equipa}" data-tipo="${e.tipo}">
@@ -297,32 +338,72 @@ async function carregarEquipasSelect(select) {
 
 async function carregarEquipasLivres(select, tipo) {
     const equipas = await apiFetch('/api/admin/equipas');
-
     const linguasDoc = JSON.parse(select.dataset.linguasDocumento || '[]');
 
-    select.innerHTML = `<option value="">Selecionar</option>`;
+    const equipasFiltradas = equipas.filter(e => {
+        if (e.tipo !== tipo) return false;
+        if (e.ocupada) return false;
+        if (!linguasDoc.length) return true;
+        if (!e.siglas_linguas) return false;
 
-    equipas
-        .filter(e => {
-            if (e.tipo !== tipo) return false;
-            if (e.ocupada) return false;
-            if (!linguasDoc.length) return true;
-            if (!e.siglas_linguas) return false;
+        const linguasEquipa = e.siglas_linguas.split(',').map(l => l.trim());
+        return linguasDoc.every(l => linguasEquipa.includes(l));
+    });
 
-            const linguasEquipa = e.siglas_linguas
-                .split(',')
-                .map(l => l.trim());
+    const valorAtual = select.value;
 
-            // equipa tem TODAS as linguas do documento?
-            return linguasDoc.every(l => linguasEquipa.includes(l));
-        })
-        .forEach(e => {
-            select.innerHTML += `
-                <option value="${e.id_equipa}">
-                    ${e.nome_equipa} (${e.siglas_linguas})
-                </option>
-            `;
-        });
+    select.innerHTML = '';
+
+    if (equipasFiltradas.length === 0) {
+        select.innerHTML = `<option value="">Nenhuma equipa encontrada</option>`;
+        select.disabled = true;
+        return;
+    }
+
+    select.innerHTML = `<option value="">Selecionar equipa livre</option>`;
+    equipasFiltradas.forEach(e => {
+        select.innerHTML += `
+            <option value="${e.id_equipa}">
+                ${e.nome_equipa} (${e.siglas_linguas})
+            </option>
+        `;
+    });
+
+    if (equipasFiltradas.some(e => e.id_equipa == valorAtual)) {
+        select.value = valorAtual;
+    } else {
+        select.value = '';
+    }
+
+    select.disabled = false;
+}
+
+
+
+async function carregarResponsaveisPorEquipa(selectResponsavel, equipaId) {
+    if (!equipaId) {
+        selectResponsavel.innerHTML = '<option value="">Selecionar responsável</option>';
+        selectResponsavel.disabled = true;
+        return;
+    }
+
+    const equipa = await apiFetch(`/api/admin/equipas/${equipaId}`);
+
+    const membros = Array.isArray(equipa.membros)
+        ? equipa.membros
+        : JSON.parse(equipa.membros || '[]');
+
+    selectResponsavel.innerHTML = '<option value="">Selecionar responsável</option>';
+
+    membros.forEach(m => {
+        selectResponsavel.innerHTML += `
+            <option value="${m.id_conta}">
+                ${m.nome_utilizador} (${m.lingua_principal}${m.lingua_secundaria ? ' / ' + m.lingua_secundaria : ''})
+            </option>
+        `;
+    });
+
+    selectResponsavel.disabled = membros.length === 0;
 }
 
 /* =========================
@@ -330,20 +411,45 @@ async function carregarEquipasLivres(select, tipo) {
 ========================= */
 
 async function carregarUtilizadoresPorTipo(select, tipo) {
-    const users = await apiFetch('/api/admin/users');
+    const [users, equipas] = await Promise.all([
+        apiFetch('/api/admin/users'),
+        apiFetch('/api/admin/equipas')
+    ]);
+
     const cargoId = tipo === 'tradutores' ? 3 : 4;
 
-    select.innerHTML = `<option value="">Selecionar</option>`;
-    users
-        .filter(u => u.cargo_id === cargoId)
-        .forEach(u => {
-            select.innerHTML += `
-                <option value="${u.id_conta}">
-                    ${u.nome_utilizador}
-                </option>
-            `;
-        });
+    const idsEmEquipa = new Set();
+    equipas.forEach(e => {
+        if (e.membros) {
+            e.membros.split(',').forEach(nome => {
+                const u = users.find(u => u.nome_utilizador === nome.trim());
+                if (u) idsEmEquipa.add(u.id_conta);
+            });
+        }
+    });
+
+    const utilizadoresFiltrados = users.filter(u => u.cargo_id === cargoId && !idsEmEquipa.has(u.id_conta));
+
+    select.innerHTML = '';
+
+    if (utilizadoresFiltrados.length === 0) {
+        select.innerHTML = `<option value="">Nenhum utilizador disponível</option>`;
+        select.disabled = true;
+        return;
+    }
+
+    select.innerHTML = `<option value="">Selecionar utilizador</option>`;
+    utilizadoresFiltrados.forEach(u => {
+        select.innerHTML += `
+            <option value="${u.id_conta}">
+                ${u.nome_utilizador}
+            </option>
+        `;
+    });
+
+    select.disabled = false;
 }
+
 
 /* =========================
    DOCUMENTOS
@@ -351,48 +457,67 @@ async function carregarUtilizadoresPorTipo(select, tipo) {
 
 async function onDocumentoChange(selectDoc, selectEquipa, tipo) {
     const docId = selectDoc.value;
+
     if (!docId) {
-        selectEquipa.innerHTML = `<option value="">Selecionar</option>`;
+        selectEquipa.innerHTML = `<option value="">Selecionar documento primeiro</option>`;
+        selectEquipa.disabled = true;
+
+        const form = selectEquipa.closest('form');
+        const responsavel = form?.querySelector('select[name="responsavel_id"]');
+        if (responsavel) {
+            responsavel.innerHTML = `<option value="">Selecionar equipa primeiro</option>`;
+            responsavel.disabled = true;
+        }
         return;
     }
 
     const doc = await apiFetch(`/api/admin/documentos/${docId}`);
 
-    selectEquipa.dataset.linguasDocumento = JSON.stringify([
-        doc.lingua_origem,
-        doc.lingua_destino
-    ]);
+    selectEquipa.dataset.linguasDocumento = JSON.stringify([doc.lingua_origem, doc.lingua_destino]);
 
     await carregarEquipasLivres(selectEquipa, tipo);
+
+    selectEquipa.disabled = selectEquipa.options.length <= 1;
+
+    const form = selectEquipa.closest('form');
+    const responsavel = form?.querySelector('select[name="responsavel_id"]');
+    if (responsavel) {
+        if (!selectEquipa.value) {
+            responsavel.innerHTML = `<option value="">Selecionar equipa primeiro</option>`;
+            responsavel.disabled = true;
+        } else {
+            await carregarResponsaveisPorEquipa(responsavel, selectEquipa.value);
+        }
+    }
 }
+
+
 
 async function carregarDocumentosSelect(select, tipo) {
     const docs = await apiFetch('/api/admin/documentos');
 
-    select.innerHTML = `<option value="">Selecionar</option>`;
+    select.innerHTML = `<option value="">Selecionar documento</option>`;
 
-    if (tipo === 'tradutores') {
-        docs
-        .filter(d => d.estado === 'pago')
-        .forEach(d => {
-            select.innerHTML += `
-                <option value="${d.id_documento}">
-                    #TRX-${String(d.id_documento).padStart(4, '0')} - ${d.nome_documento} (${d.lingua_origem} → ${d.lingua_destino})
-                </option>
-            `;
-        });
-    } else if (tipo === 'revisores') {
-        docs
-        .filter(d => d.estado === 'traduzido')
-        .forEach(d => {
-            select.innerHTML += `
-                <option value="${d.id_documento}">
-                    #TRX-${String(d.id_documento).padStart(4, '0')} - ${d.nome_documento} (${d.lingua_origem} → ${d.lingua_destino})
-                </option>
-            `;
-        });
+    const filtrados = (tipo === 'tradutores')
+        ? docs.filter(d => d.estado === 'pago')
+        : docs.filter(d => d.estado === 'traduzido');
+
+    filtrados.forEach(d => {
+        select.innerHTML += `
+            <option value="${d.id_documento}">
+                #TRX-${String(d.id_documento).padStart(4, '0')} - ${d.nome_documento} (${d.lingua_origem} → ${d.lingua_destino})
+            </option>
+        `;
+    });
+    
+    if (filtrados.length === 0) {
+        select.innerHTML = `<option value="">Nenhum documento disponível</option>`;
+        select.disabled = true;
+    } else {
+        select.disabled = false;
     }
 }
+
 
 /* =========================
    ELIMINAR

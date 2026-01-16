@@ -5,7 +5,7 @@ const { verifyToken, verifyRole } = require('../middleware/auth.middleware');
 const router = express.Router();
 
 // Obter o nome do admin
-router.get('/me', verifyToken, async (req, res) => {
+router.get('/me', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [rows] = await db.query('SELECT nome_utilizador FROM contas WHERE id_conta = ?', [req.user.id]);
         if (!rows.length) {
@@ -22,7 +22,7 @@ router.get('/me', verifyToken, async (req, res) => {
 
 /* Dashboard admin */
 // Últimos documentos enviados
-router.get('/ultimos-documentos', verifyToken, async (req, res) => {
+router.get('/ultimos-documentos', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [docs ] = await db.query(`
             SELECT 
@@ -48,7 +48,7 @@ router.get('/ultimos-documentos', verifyToken, async (req, res) => {
 });
 
 // Estatísticas gerais
-router.get('/estatisticas', verifyToken, async (req, res) => {
+router.get('/estatisticas', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [[{ documentos_hoje }]] = await db.query('SELECT COUNT(*) AS documentos_hoje FROM documentos WHERE DATE(data_envio) = CURDATE()');
         const [[{ total_documentos }]] = await db.query('SELECT COUNT(*) AS total_documentos FROM documentos');
@@ -64,7 +64,7 @@ router.get('/estatisticas', verifyToken, async (req, res) => {
 
 /* Documentos admin */
 // Listar documentos
-router.get('/documentos', verifyToken, async (req, res) => {
+router.get('/documentos', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT
@@ -106,7 +106,7 @@ router.get('/documentos', verifyToken, async (req, res) => {
 });
 
 // Receber dados de um documento específico
-router.get('/documentos/:documentoId', verifyToken, async (req, res) => {
+router.get('/documentos/:documentoId', verifyToken, verifyRole(1), async (req, res) => {
     const { documentoId } = req.params;
 
     try {
@@ -130,7 +130,7 @@ router.get('/documentos/:documentoId', verifyToken, async (req, res) => {
 });
 
 // Alterar valor do documento
-router.put('/documentos/:idDocumento/valor', verifyToken, async (req, res) => {
+router.put('/documentos/:idDocumento/valor', verifyToken, verifyRole(1), async (req, res) => {
     const { idDocumento } = req.params;
     const { valor } = req.body;
 
@@ -155,7 +155,7 @@ router.put('/documentos/:idDocumento/valor', verifyToken, async (req, res) => {
 });
 
 // Eliminar documento
-router.delete('/documentos/:idDocumento', verifyToken, async (req, res) => {
+router.delete('/documentos/:idDocumento', verifyToken, verifyRole(1), async (req, res) => {
     const { idDocumento } = req.params;
 
     try {
@@ -270,7 +270,7 @@ router.delete('/users/:idConta', verifyToken, verifyRole(1), async (req, res) =>
 
 /* Equipas admin */
 // Listar equipas
-router.get('/equipas', verifyToken, async (req, res) => {
+router.get('/equipas', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [rows] = await db.query(`
             SELECT
@@ -319,7 +319,7 @@ router.get('/equipas', verifyToken, async (req, res) => {
     }
 });
 
-router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
+router.get('/equipas/:idEquipa', verifyToken, verifyRole(1), async (req, res) => {
     const { idEquipa } = req.params;
     try {
         const [rows] = await db.query(`
@@ -378,7 +378,7 @@ router.get('/equipas/:idEquipa', verifyToken, async (req, res) => {
     }
 });
 
-router.put('/equipas/:id', verifyToken, async (req, res) => {
+router.put('/equipas/:id', verifyToken, verifyRole(1), async (req, res) => {
     const { id } = req.params;
     const { nome_equipa } = req.body;
 
@@ -390,7 +390,7 @@ router.put('/equipas/:id', verifyToken, async (req, res) => {
     }
 });
 
-router.delete('/equipas/:id/utilizadores/:conta_id', verifyToken, async (req, res) => {
+router.delete('/equipas/:id/utilizadores/:conta_id', verifyToken, verifyRole(1), async (req, res) => {
     const { id, conta_id } = req.params;
 
     try {
@@ -401,12 +401,21 @@ router.delete('/equipas/:id/utilizadores/:conta_id', verifyToken, async (req, re
     }
 });
 
-router.delete('/documentos/:id/desassociar', verifyToken, async (req, res) => {
+router.delete('/documentos/:id/desassociar', verifyToken, verifyRole(1), async (req, res) => {
     const { id } = req.params;
-    const { equipa } = req.body;
+    const { equipa, estado } = req.body;
 
     try {
         await db.query(`DELETE FROM equipa_documentos WHERE documento_id = ? AND equipa_id = ?`, [id, equipa]);
+        
+        const [rows] = await db.query(`SELECT tipo FROM equipas WHERE id_equipa = ?`, [equipa]);
+        const tipoEquipa = rows[0]?.tipo;
+
+        if (tipoEquipa) {
+            const novoEstado = tipoEquipa === 'tradutores' ? 'pago' : 'traduzido';
+            await db.query(`UPDATE documentos SET estado = ? WHERE id_documento = ?`, [novoEstado, id]);
+        }
+        
         res.json({ message: 'Documento removido da equipa' });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -416,7 +425,7 @@ router.delete('/documentos/:id/desassociar', verifyToken, async (req, res) => {
 
 
 // Criar equipa
-router.post('/equipas', verifyToken, async (req, res) => {
+router.post('/equipas', verifyToken, verifyRole(1), async (req, res) => {
     const { nome_equipa, tipo } = req.body;
 
     if (!nome_equipa || !tipo) {
@@ -436,7 +445,7 @@ router.post('/equipas', verifyToken, async (req, res) => {
 });
 
 // Adicionar Utilizador à Equipa
-router.post('/equipas/:idEquipa/utilizadores', verifyToken, async (req, res) => {
+router.post('/equipas/:idEquipa/utilizadores', verifyToken, verifyRole(1), async (req, res) => {
     const { idEquipa } = req.params;
     const { conta_id } = req.body;
 
@@ -505,10 +514,10 @@ router.delete('/equipas/:idEquipa', verifyToken, verifyRole(1), async (req, res)
 });
 
 // Associar Documento a Equipas
-router.post('/documentos/associar', verifyToken, async (req, res) => {
-    const { documento_id, equipa } = req.body;
+router.post('/documentos/associar', verifyToken, verifyRole(1), async (req, res) => {
+    const { documento_id, equipa, responsavel_id  } = req.body;
 
-    if (!documento_id || !equipa) {
+    if (!documento_id || !equipa || !responsavel_id) {
         return res.status(400).json({ message: 'Dados incompletos.' });
     }
 
@@ -552,9 +561,9 @@ router.post('/documentos/associar', verifyToken, async (req, res) => {
         }
 
         await db.query(
-            `INSERT INTO equipa_documentos (equipa_id, documento_id)
-             VALUES (?, ?)`,
-            [equipa, documento_id]
+            `INSERT INTO equipa_documentos (equipa_id, documento_id, responsavel_upload_id)
+             VALUES (?, ?, ?)`,
+            [equipa, documento_id, responsavel_id]
         );
 
         res.status(201).json({
@@ -572,7 +581,7 @@ router.post('/documentos/associar', verifyToken, async (req, res) => {
 });
 
 // Alterar estado do documento
-router.put('/documentos/:id/estado', verifyToken, async (req, res) => {
+router.put('/documentos/:id/estado', verifyToken, verifyRole(1), async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     let estadoFinal;
@@ -622,7 +631,7 @@ router.put('/documentos/:id/estado', verifyToken, async (req, res) => {
 
 
 // Carregar cargos
-router.get('/cargos', verifyToken, async (req, res) => {
+router.get('/cargos', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [rows] = await db.query('SELECT id_cargo, nome_cargo FROM cargo');
         res.json(rows);
@@ -687,7 +696,7 @@ router.delete('/cargos/:idCargo', verifyToken, verifyRole(1), async (req, res) =
 
 
 // Carregar linguas
-router.get('/linguas', verifyToken, async (req, res) => {
+router.get('/linguas', verifyToken, verifyRole(1), async (req, res) => {
     try {
         const [rows] = await db.query('SELECT id_lingua, nome_lingua, sigla FROM linguas');
         res.json(rows);

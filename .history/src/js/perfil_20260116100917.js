@@ -1,3 +1,4 @@
+
 /* =========================
    INIT
 ========================= */
@@ -10,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     abrirSecaoInicialPerfil();
     carregarEquipa('tradutores');
     carregarEquipa('revisores');
-    carregarLinguasUtilizador();
 });
 
 /* =========================
@@ -143,11 +143,6 @@ const updateNavMenu = () => {
                     'fas fa-file-signature',
                     'Documentos da Equipa',
                     'documentos-equipa-tradutores'
-                ),
-                criarItem(
-                    'fas fa-language',
-                    'Alterar as Línguas',
-                    'alterar-linguas'
                 )
             ]
         );
@@ -176,11 +171,6 @@ const updateNavMenu = () => {
                     'fas fa-file-signature',
                     'Documentos da Equipa',
                     'documentos-equipa-revisores'
-                ),
-                criarItem(
-                    'fas fa-language',
-                    'Alterar as Línguas',
-                    'alterar-linguas'
                 )
             ]
         );
@@ -335,14 +325,8 @@ async function carregarPerfil() {
         const user = await apiFetch('/api/users/me');
 
         document.getElementById('userNameDisplay').textContent = `Olá, ${user.nome_utilizador}`;
+        document.querySelector('.user-avatar').textContent = user.nome_utilizador.substring(0, 2).toUpperCase();
 
-        const nome = user.nome_utilizador.trim();
-        const partes = nome.split(/\s+/);
-        let iniciais = '';
-        if (partes.length >= 2) iniciais = partes[0][0] + partes[1][0];
-
-        else iniciais = nome.substring(0, 2);
-        document.querySelector('.user-avatar').textContent = iniciais.toUpperCase();
         document.getElementById('perfil-nome').value = user.nome_utilizador;
         document.getElementById('perfil-email').value = user.email;
 
@@ -432,14 +416,14 @@ async function carregarEquipa(tipo) {
                         <td>${d.data_envio || '-'}</td>
                         <td>${d.valor != null ? d.valor.toFixed(2) + '€' : '-'}</td>
                         <td>${d.paginas || '-'}</td>
-                        <td>${d.equipa_oposta ? `${d.equipa_oposta.nome_equipa} (${d.responsavel_upload_oposta?.email || 'Não tem responsavel'})` : `Não tem equipa associada`}</td>
+                        <td>${d.equipa_oposta ? `${d.equipa_oposta.nome_equipa} (${d.responsavel_upload_oposta?.email  || 'Não tem responsavel'})` : `Não tem equipa de ${tipo}`}</td>
                         <td>
                             <a href="${d.documento_link}" target="_blank" class="btn btn-sm btn-primary">Original</a>
                             ${d.documento_link_final ? ` <a href="${d.documento_link_final}" target="_blank" class="btn btn-sm btn-success ms-1">Final</a>` : ''}
                             ${(d.estado === 'em_revisao' || d.estado === 'aguardando_assinaturas') && d.documento_link_traduzido ? `
                                 <a href="${d.documento_link_traduzido}" target="_blank" class="btn btn-sm btn-secondary ms-1">Traduzido</a>
                             ` : ''}
-                            ${((d.estado === 'em_revisao' && tipo === 'revisores') || d.estado === 'aguardando_assinaturas' || (d.estado === 'em_traducao' && tipo === 'tradutores') || (d.estado === 'aguardando_link' && tipo === 'tradutores')) ? `
+                            ${((d.estado === 'em_revisao' && tipo === 'revisores') || d.estado === 'aguardando_assinaturas' || (d.estado === 'em_traducao' && tipo === 'tradutores') || (d.estado === 'aguardando_link' && tipo === 'tradutores') ) ? `
                                 <button class="btn btn-sm btn-info ms-1"
                                     onclick="abrirFormAssinatura(${d.id_documento}, this, '${tipo}')">
                                     Assinar
@@ -459,66 +443,6 @@ async function carregarEquipa(tipo) {
     }
 }
 
-async function carregarLinguasUtilizador() {
-    const selectPrincipal = document.querySelector('select[name="lingua_principal_id"]');
-    const selectSecundaria = document.querySelector('select[name="lingua_secundaria_id"]');
-
-    const data = await apiFetch('/api/users/linguas');
-
-    selectPrincipal.innerHTML = '<option value="">Selecionar lingua principal</option>';
-    selectSecundaria.innerHTML = '<option value="">Selecionar lingua secundaria</option>';
-
-    data.linguas.forEach(l => {
-        selectPrincipal.innerHTML += `<option value="${l.id_lingua}">${l.nome_lingua} (${l.sigla})</option>`;
-        selectSecundaria.innerHTML += `<option value="${l.id_lingua}">${l.nome_lingua} (${l.sigla})</option>`;
-    });
-
-    if (data.perfil) {
-        selectPrincipal.value = data.perfil.lingua_principal;
-        selectSecundaria.value = data.perfil.lingua_secundaria || '';
-    }
-
-    selectPrincipal.addEventListener('change', () => {
-        Array.from(selectSecundaria.options).forEach(opt => {
-            opt.disabled = opt.value === selectPrincipal.value && opt.value !== "";
-        });
-    });
-
-    selectSecundaria.addEventListener('change', () => {
-        Array.from(selectPrincipal.options).forEach(opt => {
-            opt.disabled = opt.value === selectSecundaria.value && opt.value !== "";
-        });
-    });
-
-    Array.from(selectSecundaria.options).forEach(opt => {
-        opt.disabled = opt.value === selectPrincipal.value && opt.value !== "";
-    });
-}
-
-document.getElementById('form-alterar-linguas').addEventListener('submit', async e => {
-    e.preventDefault();
-
-    const principal = e.target.lingua_principal_id.value;
-    const secundaria = e.target.lingua_secundaria_id.value;
-
-    if (!principal) return alert('Língua principal é obrigatória');
-
-    try {
-        await apiFetch('/api/users/linguas', {
-            method: 'PUT',
-            body: JSON.stringify({ 
-                lingua_principal_id: principal, 
-                lingua_secundaria_id: secundaria || null 
-            })
-        });
-
-        alert('Línguas atualizadas com sucesso');
-    } catch (err) {
-        console.error(err);
-        alert('Erro ao atualizar línguas');
-    }
-});
-
 
 async function abrirFormAssinatura(id, btn, tipo) {
     const equipa = await apiFetch('/api/users/me/equipa');
@@ -532,13 +456,13 @@ async function abrirFormAssinatura(id, btn, tipo) {
     btn.dataset.open = '1';
 
     let revisaoGuardada = false;
-
-    const wrapper = tipo === 'tradutores'
-        ? document.getElementById('form-tradutor-wrapper')
+    
+    const wrapper = tipo === 'tradutores' 
+        ? document.getElementById('form-tradutor-wrapper') 
         : document.getElementById('form-revisor-wrapper');
 
-    const form = tipo === 'tradutores'
-        ? document.getElementById('form-tradutor')
+    const form = tipo === 'tradutores' 
+        ? document.getElementById('form-tradutor') 
         : document.getElementById('form-revisor');
 
     const msgRevisao = form.querySelector('#msg-revisao');
@@ -559,14 +483,14 @@ async function abrirFormAssinatura(id, btn, tipo) {
 
     const documento = equipa.documentos.find(d => d.id_documento === id);
     if (!documento) return;
-
+    
     form.id_documento.value = documento.id_documento;
     form.nome_documento.value = '#TRX-' + formatarId(documento.id_documento) + ' ' + documento.nome_documento;
     form.nome_responsavel.value = documento.responsavel_upload_atual.nome_utilizador + ` (${documento.responsavel_upload_atual.email})`;
+    
 
-
-    const ul = tipo === 'tradutores'
-        ? document.getElementById('assinaturas-tradutores')
+    const ul = tipo === 'tradutores' 
+        ? document.getElementById('assinaturas-tradutores') 
         : document.getElementById('assinaturas-revisores');
     ul.innerHTML = '';
 
@@ -604,7 +528,7 @@ async function abrirFormAssinatura(id, btn, tipo) {
 
             btnValidar.onclick = async () => {
                 const erros = checkboxSemErros.checked ? null : inputErros.value.trim();
-
+                
                 await guardarRevisaoDocumento(documento.id_documento, erros);
                 documento.erros_encontrados = erros;
                 revisaoGuardada = true;
@@ -655,12 +579,12 @@ async function abrirFormAssinatura(id, btn, tipo) {
                         </label>
                     </div>
                 `;
-
+                
 
                 const checkbox = li.querySelector('input[type="checkbox"]');
                 checkbox.onchange = async () => {
                     let timeoutMsgRevisao;
-                    if ((!revisaoGuardada && isResponsavel) && tipo == 'revisores') {
+                    if (!  && tipo == 'revisores') {
                         msgRevisao.style.display = 'inline-block';
                         checkbox.checked = false;
 
@@ -688,11 +612,12 @@ async function abrirFormAssinatura(id, btn, tipo) {
         });
     }
 
-
+    
     if (tipo === 'tradutores') atualizarUploadBotao(documento, user);
     wrapper.style.display = 'block';
 }
 
+ 
 function atualizarUploadBotao(documento, user) {
     const btn = document.getElementById('btn-upload-tradutor');
 
@@ -708,54 +633,61 @@ function atualizarUploadBotao(documento, user) {
     }
 }
 
+
 // Função para upload do ficheiro traduzido e deve alterar o estado para em_revisao
 function uploadFicheiro(idDocumento, event) {
-    if (event) event.preventDefault();
+  if (event) event.preventDefault();
 
-    const inputFile = document.getElementById('file-traduzido');
+  const inputFile = document.getElementById('file-traduzido');
 
-    // Limpa qualquer ficheiro anterior
-    inputFile.value = '';
+  // Limpa qualquer ficheiro anterior
+  inputFile.value = '';
 
-    // Define o handler para onchange apenas uma vez
-    inputFile.onchange = async () => {
-        if (inputFile.files.length === 0) {
-            alert('Por favor, selecione um ficheiro para upload.');
-            return;
-        }
+  // Define o handler para onchange apenas uma vez
+  inputFile.onchange = async () => {
+    if (inputFile.files.length === 0) {
+      alert('Por favor, selecione um ficheiro para upload.');
+      return;
+    }
 
-        const formData = new FormData();
-        formData.append('file', inputFile.files[0]);
+    const formData = new FormData();
+    formData.append('file', inputFile.files[0]);
 
-        try {
-            const token = localStorage.getItem('token'); // ajusta se guardas o token em outro lugar
+    try {
+      const token = localStorage.getItem('token'); // ajusta se guardas o token em outro lugar
 
-            const response = await fetch(`/api/users/documentos/${idDocumento}/upload-traduzido`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: formData,
-            });
+      const response = await fetch(`/api/users/documentos/${idDocumento}/upload-traduzido`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Erro desconhecido no upload');
-            }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro desconhecido no upload');
+      }
 
-            const data = await response.json();
-            alert('Upload realizado com sucesso!');
-            console.log('URL do ficheiro:', data.url);
-            carregarEquipa();
-        } catch (err) {
-            console.error('Erro ao fazer upload:', err);
-            alert(`Erro ao fazer upload: ${err.message}`);
-        }
-    };
+      const data = await response.json();
+      alert('Upload realizado com sucesso!');
+      console.log('URL do ficheiro:', data.url);
+      carregarEquipa();
+    } catch (err) {
+      console.error('Erro ao fazer upload:', err);
+      alert(`Erro ao fazer upload: ${err.message}`);
+    }
+  };
 
-    // Abre o seletor de ficheiros
-    inputFile.click();
+  // Abre o seletor de ficheiros
+  inputFile.click();
 }
+
+
+
+
+
+
 
 async function assinarDocumento(idDocumento, idConta, assinou, tipo) {
     await apiFetch(`/api/users/documentos/${idDocumento}/assinatura`, {
@@ -765,8 +697,8 @@ async function assinarDocumento(idDocumento, idConta, assinou, tipo) {
     carregarEquipa(tipo);
 
     // Fecha o formulário
-    const wrapper = tipo === 'tradutores'
-        ? document.getElementById('form-tradutor-wrapper')
+    const wrapper = tipo === 'tradutores' 
+        ? document.getElementById('form-tradutor-wrapper') 
         : document.getElementById('form-revisor-wrapper');
 
     const btnFechar = wrapper.querySelector('.btn-fechar-form');
@@ -777,7 +709,7 @@ async function guardarRevisaoDocumento(idDocumento, errosEncontrados) {
     const mensagem = errosEncontrados
         ? "O documento tem erros. Deseja salvar e marcar como 'Em Traduçao'?"
         : "Deseja salvar a revisão como sem erros?";
-
+    
     if (!confirm(mensagem)) return;
 
     const payload = { erros_encontrados: errosEncontrados || 'Sem Erros' };
@@ -787,6 +719,9 @@ async function guardarRevisaoDocumento(idDocumento, errosEncontrados) {
         body: JSON.stringify(payload)
     });
 }
+
+
+
 
 // Função auxiliar para ação do documento
 function getAcaoHTML(doc) {

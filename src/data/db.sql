@@ -165,99 +165,19 @@ INSERT INTO contas (nome_utilizador, email, username, senha_hash, cargo_id) VALU
 ('Inês Revisora', 'ines@tradux.pt', 'inesrev', '$2b$10$0cwKx.evlf3jDJBuJ.9t/uky/O960QGblq5.Wy2HHhoKqUsEkkRMG', 4);
 
 INSERT INTO perfis_linguisticos (conta_id, lingua_principal, lingua_secundaria) VALUES
-(3, 1, 2),  -- Ana: Português → Inglês
-(4, 2, 1),  -- Carlos: Inglês → Português
-(7, 1, 4),  -- Sofia: PT → FR
-(8, 2, 3),  -- Luís: EN → ES
-(9, 3, 1);  -- Inês: ES → PT
+(3, 1, 2),  -- João: Português → Inglês
+(4, 2, 1),  -- Ana: Inglês → Português
+(5, 1, 4),  -- Carlos: PT → FR
+(9, 1, 3),  -- Luís: EN → ES
+(10, 3, 1);  -- Inês: ES → PT
 
-INSERT INTO documentos (
-    nome_documento, 
-    documento_link, 
-    documento_link_final, 
-    documento_link_traduzido,
-    lingua_origem, 
-    lingua_destino, 
-    valor, 
-    paginas, 
-    estado, 
-    erros_encontrados, 
-    conta_id,
-    data_envio
-) VALUES
-('Documento 1', '/uploads/doc1_original.pdf', NULL, NULL, 1, 2, 25.00, 5, 'a_pagar', NULL, 6, CURRENT_TIMESTAMP),
-('Documento 2', '/uploads/doc2_original.docx', '/uploads/doc2_final.docx', '/uploads/doc2_traduzido.docx', 2, 1, 40.00, 8, 'finalizado', 'Pequenos erros gramaticais corrigidos', 6, CURRENT_TIMESTAMP),
-('Documento 3', '/uploads/doc3_original.pdf', NULL, NULL, 1, 3, 15.00, 6, 'aguardando_link', NULL, 6, CURRENT_TIMESTAMP),
-('Documento 4', '/uploads/doc4_original.pdf', NULL, NULL, 1, 3, 35.00, 7, 'aguardando_assinaturas', NULL, 6, CURRENT_TIMESTAMP),
-('Documento 5', '/uploads/doc5_original.pdf', NULL, NULL, 1, 3, 20.00, 4, 'em_traducao', NULL, 6, CURRENT_TIMESTAMP),
-('Documento 6', '/uploads/doc6_original.pdf', NULL, NULL, 1, 3, 50.00, 10, 'pago', NULL, 6, CURRENT_TIMESTAMP),
-('Documento 7', '/uploads/doc7_original.pdf', NULL, NULL, 1, 3, 30.00, 3, 'cancelado', NULL, 6, CURRENT_TIMESTAMP),
-('Contrato Comercial', '/uploads/contrato_original.pdf', NULL, NULL, 1, 2, 60.00, 12, 'em_traducao', NULL, 7, CURRENT_TIMESTAMP),
-('Manual Técnico', '/uploads/manual_original.pdf', NULL, NULL, 2, 1, 80.00, 20, 'em_revisao', NULL, 7, CURRENT_TIMESTAMP),
-('Certidão', '/uploads/certidao_original.pdf', '/uploads/certidao_final.pdf', '/uploads/certidao_traduzido.pdf', 1, 4, 30.00, 3, 'finalizado', NULL, 7, CURRENT_TIMESTAMP),
-('Relatório Financeiro', '/uploads/relatorio.pdf', NULL, '/uploads/relatorio_traduzido.docx', 3, 1, 0.00, 15, 'em_revisao', NULL, 7, CURRENT_TIMESTAMP),
-('Apresentação', '/uploads/apresentacao.pptx', '/uploads/apresentacao_final.pptx', '/uploads/apresentacao_traduzida.pptx', 2, 3, 45.00, 9, 'a_pagar', NULL, 7, CURRENT_TIMESTAMP);
-
-INSERT INTO documentos (nome_documento, documento_link, documento_link_traduzido, lingua_origem, lingua_destino, valor, paginas, estado, erros_encontrados, conta_id) VALUES
-('Documento Traduzido Extra', '/uploads/doc_extra_original.pdf', '/uploads/doc_extra_traduzido.pdf', 1, 2, 22.50, 5, 'traduzido', NULL, 6);
 
 INSERT INTO equipas (nome_equipa, tipo) VALUES
 ('Equipa de Tradutores', 'tradutores'),
-('Equipa de Revisores', 'revisores'),
-('Tradutores FR', 'tradutores'),
-('Revisores Técnicos', 'revisores');
+('Equipa de Revisores', 'revisores');
 
 INSERT INTO equipa_membros (equipa_id, conta_id) VALUES
 (1, 4),
-(2, 5), -- Carlos Revisor é membro da equipa de revisores
+(2, 5),
 (2, 10),
-(3, 7), -- Sofia na equipa Tradutores FR
-(1, 8), -- Luís na equipa Tradutores FR
-(1, 9); -- Inês na equipa Revisores Técnicos
-
-INSERT INTO equipa_documentos (equipa_id, documento_id, responsavel_upload_id) VALUES
-(1, 3, 4),   -- Ana Tradutora fez upload do Documento 3
-(1, 4, 4),   -- Ana Tradutora fez upload do Documento 4
-(1, 5, 4),   -- Sofia Tradutora fez upload do Documento 5
-(3, 11, 8),  -- Sofia Tradutora fez upload do Relatório Financeiro
-(2, 11, 5),
-(4, 12, 9);  -- Inês Revisora fez upload da Apresentação
- 
-INSERT INTO equipa_assinaturas (conta_id, documento_id, assinou_documento) VALUES
-(4, 3, 1),
-(9, 3, 1),
-(8, 3, 1),
-(8, 4, 1),
-(4, 4, 1);
-
--- INSERT INTO recibos (
---     conta_id,
---     documento_id,
---     numero_recibo,
---     data_emissao,
---     data_pagamento,
---     nome_cliente,
---     email_cliente,
---     descricao_servico,
---     id_servico,
---     linguas,
---     quantidade,
---     valor_servico,
---     valor_iva,
---     valor_total
--- ) VALUES (
---     2,                          -- ID da conta do cliente (ex: Maria João Silva)
---     7,                          -- ID do documento
---     'REC-2026-0048',            -- Número do recibo
---     '2026-01-06 00:00:00',      -- Data de emissão
---     '2026-01-06 00:00:00',      -- Data de pagamento
---     'Maria João Silva',         -- Nome do cliente
---     'maria.silva@email.com',    -- Email do cliente
---     'Tradução Certificada - Contrato Comercial',  -- Descrição do serviço
---     '#TRX-2048',                -- ID do serviço
---     'Português → Inglês',       -- Línguas
---     '12 páginas',               -- Quantidade
---     222.00,                     -- Valor do serviço
---     50.37,                      -- IVA (23%)
---     267.00                      -- Total pago
--- );
+(1, 8);
