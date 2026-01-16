@@ -516,7 +516,7 @@ router.delete('/documento/:id', verifyToken, async (req, res) => {
     }
 });
 
-router.post('/documentos/:idDocumento/upload-traduzido', verifyToken, verifyRole([3]), upload.single('file'), async (req, res) => {
+router.post('/documentos/:idDocumento/upload-traduzido', verifyToken, verifyRole([4]), upload.single('file'), async (req, res) => {
     const { idDocumento } = req.params;
     const userId = req.user.id;
 

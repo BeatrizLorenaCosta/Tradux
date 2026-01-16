@@ -672,7 +672,7 @@ function uploadFicheiro(idDocumento, event) {
       const data = await response.json();
       alert('Upload realizado com sucesso!');
       console.log('URL do ficheiro:', data.url);
-      carregarEquipa();
+      
     } catch (err) {
       console.error('Erro ao fazer upload:', err);
       alert(`Erro ao fazer upload: ${err.message}`);
