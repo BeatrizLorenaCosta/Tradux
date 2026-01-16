@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     abrirSecaoInicialPerfil();
     carregarEquipa('tradutores');
     carregarEquipa('revisores');
+    carregarLinguasUtilizador();
 });
 
 /* =========================
@@ -142,6 +143,11 @@ const updateNavMenu = () => {
                     'fas fa-file-signature',
                     'Documentos da Equipa',
                     'documentos-equipa-tradutores'
+                ),
+                criarItem(
+                    'fas fa-language',
+                    'Alterar as Línguas',
+                    'alterar-linguas'
                 )
             ]
         );
@@ -170,6 +176,11 @@ const updateNavMenu = () => {
                     'fas fa-file-signature',
                     'Documentos da Equipa',
                     'documentos-equipa-revisores'
+                ),
+                criarItem(
+                    'fas fa-language',
+                    'Alterar as Línguas',
+                    'alterar-linguas'
                 )
             ]
         );
@@ -324,8 +335,14 @@ async function carregarPerfil() {
         const user = await apiFetch('/api/users/me');
 
         document.getElementById('userNameDisplay').textContent = `Olá, ${user.nome_utilizador}`;
-        document.querySelector('.user-avatar').textContent = user.nome_utilizador.substring(0, 2).toUpperCase();
 
+        const nome = user.nome_utilizador.trim();
+        const partes = nome.split(/\s+/);
+        let iniciais = '';
+        if (partes.length >= 2) iniciais = partes[0][0] + partes[1][0];
+
+        else iniciais = nome.substring(0, 2);
+        document.querySelector('.user-avatar').textContent = iniciais.toUpperCase();
         document.getElementById('perfil-nome').value = user.nome_utilizador;
         document.getElementById('perfil-email').value = user.email;
 
@@ -415,7 +432,11 @@ async function carregarEquipa(tipo) {
                         <td>${d.data_envio || '-'}</td>
                         <td>${d.valor != null ? d.valor.toFixed(2) + '€' : '-'}</td>
                         <td>${d.paginas || '-'}</td>
+<<<<<<< HEAD
+                        <td>${d.equipa_oposta ? `${d.equipa_oposta.nome_equipa} (${d.responsavel_upload_oposta?.email || 'Não tem responsavel'})` : `Não tem equipa associada`}</td>
+=======
                         <td>${d.equipa_oposta ? `${d.equipa_oposta.nome_equipa} (${d.responsavel_upload_oposta?.email || 'Não tem responsavel'})` : `Não tem equipa de ${tipo}`}</td>
+>>>>>>> 912348504909677c4d67558ad297c603b6a4c41d
                         <td>
                             <a href="${d.documento_link}" target="_blank" class="btn btn-sm btn-primary">Original</a>
                             ${d.documento_link_final ? ` <a href="${d.documento_link_final}" target="_blank" class="btn btn-sm btn-success ms-1">Final</a>` : ''}
@@ -441,6 +462,66 @@ async function carregarEquipa(tipo) {
         console.error('Erro ao carregar equipa:', err);
     }
 }
+
+async function carregarLinguasUtilizador() {
+    const selectPrincipal = document.querySelector('select[name="lingua_principal_id"]');
+    const selectSecundaria = document.querySelector('select[name="lingua_secundaria_id"]');
+
+    const data = await apiFetch('/api/users/linguas');
+
+    selectPrincipal.innerHTML = '<option value="">Selecionar lingua principal</option>';
+    selectSecundaria.innerHTML = '<option value="">Selecionar lingua secundaria</option>';
+
+    data.linguas.forEach(l => {
+        selectPrincipal.innerHTML += `<option value="${l.id_lingua}">${l.nome_lingua} (${l.sigla})</option>`;
+        selectSecundaria.innerHTML += `<option value="${l.id_lingua}">${l.nome_lingua} (${l.sigla})</option>`;
+    });
+
+    if (data.perfil) {
+        selectPrincipal.value = data.perfil.lingua_principal;
+        selectSecundaria.value = data.perfil.lingua_secundaria || '';
+    }
+
+    selectPrincipal.addEventListener('change', () => {
+        Array.from(selectSecundaria.options).forEach(opt => {
+            opt.disabled = opt.value === selectPrincipal.value && opt.value !== "";
+        });
+    });
+
+    selectSecundaria.addEventListener('change', () => {
+        Array.from(selectPrincipal.options).forEach(opt => {
+            opt.disabled = opt.value === selectSecundaria.value && opt.value !== "";
+        });
+    });
+
+    Array.from(selectSecundaria.options).forEach(opt => {
+        opt.disabled = opt.value === selectPrincipal.value && opt.value !== "";
+    });
+}
+
+document.getElementById('form-alterar-linguas').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const principal = e.target.lingua_principal_id.value;
+    const secundaria = e.target.lingua_secundaria_id.value;
+
+    if (!principal) return alert('Língua principal é obrigatória');
+
+    try {
+        await apiFetch('/api/users/linguas', {
+            method: 'PUT',
+            body: JSON.stringify({ 
+                lingua_principal_id: principal, 
+                lingua_secundaria_id: secundaria || null 
+            })
+        });
+
+        alert('Línguas atualizadas com sucesso');
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao atualizar línguas');
+    }
+});
 
 
 async function abrirFormAssinatura(id, btn, tipo) {
@@ -616,7 +697,6 @@ async function abrirFormAssinatura(id, btn, tipo) {
     wrapper.style.display = 'block';
 }
 
-
 function atualizarUploadBotao(documento, user) {
     const btn = document.getElementById('btn-upload-tradutor');
 
@@ -631,7 +711,6 @@ function atualizarUploadBotao(documento, user) {
         btn.onclick = null;
     }
 }
-
 
 // Função para upload do ficheiro traduzido e deve alterar o estado para em_revisao
 function uploadFicheiro(idDocumento, event) {
@@ -682,12 +761,6 @@ function uploadFicheiro(idDocumento, event) {
     inputFile.click();
 }
 
-
-
-
-
-
-
 async function assinarDocumento(idDocumento, idConta, assinou, tipo) {
     await apiFetch(`/api/users/documentos/${idDocumento}/assinatura`, {
         method: 'POST',
@@ -718,9 +791,6 @@ async function guardarRevisaoDocumento(idDocumento, errosEncontrados) {
         body: JSON.stringify(payload)
     });
 }
-
-
-
 
 // Função auxiliar para ação do documento
 function getAcaoHTML(doc) {
