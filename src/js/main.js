@@ -58,16 +58,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Carrossel
     const slides = document.querySelector('.slides');
     const imagens = document.querySelectorAll('.slides img');
+
     if (slides && imagens.length) {
         let index = 0;
+        const TEMPO_ENTRE_SLIDES = 3000;
+
         setInterval(() => {
             index = (index + 1) % imagens.length;
             slides.style.transform = `translateX(${-index * 100}%)`;
-        }, 1000);
+        }, TEMPO_ENTRE_SLIDES);
     }
+
 
     // ===================== Menu dinâmico =====================
     const updateNavMenu = () => {
